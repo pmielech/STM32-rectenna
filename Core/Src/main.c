@@ -48,6 +48,8 @@ OPAMP_HandleTypeDef hopamp2;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+static float sysVal;
+static float bitRess;
 
 /* USER CODE END PV */
 
@@ -64,6 +66,33 @@ static void MX_OPAMP2_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+static void uGain_change(uint8_t newGain) {
+	switch(newGain) {
+	case 2:
+		hopamp2.Init.PgaGain = OPAMP_PGA_GAIN_2;
+		break;
+	case 4:
+		hopamp2.Init.PgaGain = OPAMP_PGA_GAIN_4;
+		break;
+	case 8:
+		hopamp2.Init.PgaGain = OPAMP_PGA_GAIN_8;
+		break;
+	case 16:
+		hopamp2.Init.PgaGain = OPAMP_PGA_GAIN_4;
+		break;
+	default:
+		hopamp2.Init.PgaGain = OPAMP_PGA_GAIN_2;
+		break;
+	}
+
+	hopamp2.Init.UserTrimming = OPAMP_TRIMMING_FACTORY;
+	if (HAL_OPAMP_Init(&hopamp2) != HAL_OK)
+	{
+	Error_Handler();
+	}
+
+}
 
 int __io_putchar(int ch) {
 	HAL_UART_Transmit(&huart2, (uint8_t*)&ch, 1, HAL_MAX_DELAY);
@@ -116,7 +145,8 @@ int main(void)
   HAL_OPAMP_SelfCalibrate(&hopamp2);
   HAL_OPAMP_Start(&hopamp2);
 
-
+  bitRess = 4096.0f;
+  sysVal = 3.30f;
 
   uint16_t cnt = 1;
   /* USER CODE END 2 */
@@ -125,26 +155,31 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  if(HAL_GPIO_ReadPin(userButt_GPIO_Port, userButt_Pin) == GPIO_PIN_RESET) {
 
+		  HAL_GPIO_WritePin(ledProcess_GPIO_Port, ledProcess_Pin, GPIO_PIN_SET);
+		  uUSER_OPAMP2_Init(4);
 
+	  } else {
+		  HAL_GPIO_WritePin(ledProcess_GPIO_Port, ledProcess_Pin, GPIO_PIN_RESET);
+	  }
 
 	  //adc pA_0
 	  HAL_ADC_Start(&hadc1);
 	  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
 	  uint32_t adcVal = HAL_ADC_GetValue(&hadc1);
-	  float basicVolt = adcVal * 3.30f /4096.0f;
-
+	  float basicVolt = adcVal * sysVal / bitRess;
 
 	  //opamp pA_7
 	  uint32_t opVal = HAL_ADC_GetValue(&hadc2);
-	  float opVolt =   opVal * 3.30f / 4096.0f;
+	  float opVolt =   opVal * sysVal / bitRess;
 
 
 	  printf("\r\n Pomiar %u \r\n", cnt);
 	  printf("Opamp: %.3f V (%lu) \r\n",opVolt,  opVal);
 	  printf("Basic: %.3f V (%lu) \r\n",basicVolt, adcVal);
 	  cnt++;
-	  HAL_Delay(1000);
+	  HAL_Delay(250);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -396,9 +431,27 @@ static void MX_USART2_UART_Init(void)
   */
 static void MX_GPIO_Init(void)
 {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(ledProcess_GPIO_Port, ledProcess_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : userButt_Pin */
+  GPIO_InitStruct.Pin = userButt_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(userButt_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : ledProcess_Pin */
+  GPIO_InitStruct.Pin = ledProcess_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(ledProcess_GPIO_Port, &GPIO_InitStruct);
 
 }
 

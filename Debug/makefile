@@ -60,8 +60,8 @@ all: main-build
 main-build: opamp_schottky.elf secondary-outputs
 
 # Tool invocations
-opamp_schottky.elf opamp_schottky.map: $(OBJS) $(USER_OBJS) /Users/patryk/STM32CubeIDE/workspace_uaadc/opamp_schottky/STM32F303RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "opamp_schottky.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/patryk/STM32CubeIDE/workspace_uaadc/opamp_schottky/STM32F303RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="opamp_schottky.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
+opamp_schottky.elf opamp_schottky.map: $(OBJS) $(USER_OBJS) /Users/patryk/github/opamp-schottky/STM32F303RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "opamp_schottky.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"/Users/patryk/github/opamp-schottky/STM32F303RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="opamp_schottky.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -u _printf_float -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
