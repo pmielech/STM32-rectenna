@@ -79,10 +79,11 @@ static void uGain_change(uint8_t newGain) {
 		hopamp2.Init.PgaGain = OPAMP_PGA_GAIN_8;
 		break;
 	case 16:
-		hopamp2.Init.PgaGain = OPAMP_PGA_GAIN_4;
+		hopamp2.Init.PgaGain = OPAMP_PGA_GAIN_16;
 		break;
 	default:
 		hopamp2.Init.PgaGain = OPAMP_PGA_GAIN_2;
+
 		break;
 	}
 
@@ -158,7 +159,7 @@ int main(void)
 	  if(HAL_GPIO_ReadPin(userButt_GPIO_Port, userButt_Pin) == GPIO_PIN_RESET) {
 
 		  HAL_GPIO_WritePin(ledProcess_GPIO_Port, ledProcess_Pin, GPIO_PIN_SET);
-		  uUSER_OPAMP2_Init(4);
+		  uGain_change(4);
 
 	  } else {
 		  HAL_GPIO_WritePin(ledProcess_GPIO_Port, ledProcess_Pin, GPIO_PIN_RESET);
@@ -170,6 +171,20 @@ int main(void)
 	  uint32_t adcVal = HAL_ADC_GetValue(&hadc1);
 	  float basicVolt = adcVal * sysVal / bitRess;
 
+	  //Gain depends on readings
+	  if(adcVal < 256) {
+		  uGain_change(16);
+	  }
+	  else if(adcVal >= 256 && adcVal < 512) {
+		  uGain_change(8);
+	  }
+	  else if(adcVal >= 512 && adcVal < 1024) {
+		  uGain_change(4);
+	  }
+	  else if(adcVal >= 1024) {
+		  uGain_change(2);
+	  }
+
 	  //opamp pA_7
 	  uint32_t opVal = HAL_ADC_GetValue(&hadc2);
 	  float opVolt =   opVal * sysVal / bitRess;
@@ -179,7 +194,7 @@ int main(void)
 	  printf("Opamp: %.3f V (%lu) \r\n",opVolt,  opVal);
 	  printf("Basic: %.3f V (%lu) \r\n",basicVolt, adcVal);
 	  cnt++;
-	  HAL_Delay(250);
+	  HAL_Delay(100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
