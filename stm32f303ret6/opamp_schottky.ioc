@@ -75,6 +75,7 @@ PA5.Locked=true
 PA5.Signal=GPIO_Output
 PA6.Locked=true
 PA6.Signal=SharedAnalog_PA6
+PA7.Locked=true
 PA7.Mode=PGA Not Connected
 PA7.Signal=OPAMP2_VINP
 PC13.GPIOParameters=GPIO_Label

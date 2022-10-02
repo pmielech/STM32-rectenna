@@ -21,6 +21,10 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "dev/dev_opamp2_custom_gain.h"
+#include "dev/dev_adc.h"
+#include "dev/dev_hash.h"
+
 #include "string.h"
 #include "stdio.h"
 /* USER CODE END Includes */
@@ -48,8 +52,7 @@ OPAMP_HandleTypeDef hopamp2;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-static float sysVal;
-static float bitRess;
+
 
 /* USER CODE END PV */
 
@@ -61,44 +64,14 @@ static void MX_ADC1_Init(void);
 static void MX_ADC2_Init(void);
 static void MX_OPAMP2_Init(void);
 /* USER CODE BEGIN PFP */
+void uCustom_gain(uint8_t gain);
+
+
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-static void uGain_change(uint8_t newGain) {
-	switch(newGain) {
-	case 2:
-		hopamp2.Init.PgaGain = OPAMP_PGA_GAIN_2;
-		break;
-	case 4:
-		hopamp2.Init.PgaGain = OPAMP_PGA_GAIN_4;
-		break;
-	case 8:
-		hopamp2.Init.PgaGain = OPAMP_PGA_GAIN_8;
-		break;
-	case 16:
-		hopamp2.Init.PgaGain = OPAMP_PGA_GAIN_16;
-		break;
-	default:
-		hopamp2.Init.PgaGain = OPAMP_PGA_GAIN_2;
-
-		break;
-	}
-
-	hopamp2.Init.UserTrimming = OPAMP_TRIMMING_FACTORY;
-	if (HAL_OPAMP_Init(&hopamp2) != HAL_OK)
-	{
-	Error_Handler();
-	}
-
-}
-
-int __io_putchar(int ch) {
-	HAL_UART_Transmit(&huart2, (uint8_t*)&ch, 1, HAL_MAX_DELAY);
-	return 1;
-}
 
 
 /* USER CODE END 0 */
@@ -146,58 +119,18 @@ int main(void)
   HAL_OPAMP_SelfCalibrate(&hopamp2);
   HAL_OPAMP_Start(&hopamp2);
 
-  bitRess = 4096.0f;
-  sysVal = 3.30f;
 
-  uint16_t cnt = 1;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  if(HAL_GPIO_ReadPin(userButt_GPIO_Port, userButt_Pin) == GPIO_PIN_RESET) {
-
-		  HAL_GPIO_WritePin(ledProcess_GPIO_Port, ledProcess_Pin, GPIO_PIN_SET);
-		  uGain_change(4);
-
-	  } else {
-		  HAL_GPIO_WritePin(ledProcess_GPIO_Port, ledProcess_Pin, GPIO_PIN_RESET);
-	  }
-
-	  //adc pA_0
-	  HAL_ADC_Start(&hadc1);
-	  HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-	  uint32_t adcVal = HAL_ADC_GetValue(&hadc1);
-	  float basicVolt = adcVal * sysVal / bitRess;
-
-	  //Gain depends on readings
-	  if(adcVal < 256) {
-		  uGain_change(16);
-	  }
-	  else if(adcVal >= 256 && adcVal < 512) {
-		  uGain_change(8);
-	  }
-	  else if(adcVal >= 512 && adcVal < 1024) {
-		  uGain_change(4);
-	  }
-	  else if(adcVal >= 1024) {
-		  uGain_change(2);
-	  }
-
-	  //opamp pA_7
-	  uint32_t opVal = HAL_ADC_GetValue(&hadc2);
-	  float opVolt =   opVal * sysVal / bitRess;
-
-
-	  printf("\r\n Pomiar %u \r\n", cnt);
-	  printf("Opamp: %.3f V (%lu) \r\n",opVolt,  opVal);
-	  printf("Basic: %.3f V (%lu) \r\n",basicVolt, adcVal);
-	  cnt++;
-	  HAL_Delay(100);
+	  v_adc_process();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  HAL_Delay(200);
   }
   /* USER CODE END 3 */
 }

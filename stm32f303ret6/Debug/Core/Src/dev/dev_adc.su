@@ -1,0 +1,6 @@
+../Core/Src/dev/dev_adc.c:23:5:__io_putchar	16	static
+../Core/Src/dev/dev_adc.c:28:6:v_get_default_value	8	static
+../Core/Src/dev/dev_adc.c:37:6:v_get_opamp_val	8	static
+../Core/Src/dev/dev_adc.c:45:6:v_adc_gain_adjustment	8	static
+../Core/Src/dev/dev_adc.c:61:6:v_send_to_serial_port	16	static
+../Core/Src/dev/dev_adc.c:71:6:v_adc_process	8	static
