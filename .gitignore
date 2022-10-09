@@ -1,0 +1,10 @@
+# stm32CubeIDE 
+opamp-schottky/stm32f303ret6/Debug
+
+# macOs
+.DS_Store
+
+# Environments
+.venv
+venv/
+
