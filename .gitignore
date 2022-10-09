@@ -1,5 +1,8 @@
 # stm32CubeIDE 
-opamp-schottky/stm32f303ret6/Debug
+*stm32f303ret6/Debug
+
+# Pycharm
+.idea/
 
 # macOs
 .DS_Store
