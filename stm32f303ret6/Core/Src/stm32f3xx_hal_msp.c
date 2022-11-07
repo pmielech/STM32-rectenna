@@ -76,8 +76,6 @@ void HAL_MspInit(void)
   /* USER CODE END MspInit 1 */
 }
 
-static uint32_t HAL_RCC_ADC12_CLK_ENABLED=0;
-
 /**
 * @brief ADC MSP Initialization
 * This function configures the hardware resources used in this example
@@ -93,10 +91,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
 
   /* USER CODE END ADC1_MspInit 0 */
     /* Peripheral clock enable */
-    HAL_RCC_ADC12_CLK_ENABLED++;
-    if(HAL_RCC_ADC12_CLK_ENABLED==1){
-      __HAL_RCC_ADC12_CLK_ENABLE();
-    }
+    __HAL_RCC_ADC12_CLK_ENABLE();
 
     __HAL_RCC_GPIOA_CLK_ENABLE();
     /**ADC1 GPIO Configuration
@@ -111,29 +106,26 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
 
   /* USER CODE END ADC1_MspInit 1 */
   }
-  else if(hadc->Instance==ADC2)
+  else if(hadc->Instance==ADC4)
   {
-  /* USER CODE BEGIN ADC2_MspInit 0 */
+  /* USER CODE BEGIN ADC4_MspInit 0 */
 
-  /* USER CODE END ADC2_MspInit 0 */
+  /* USER CODE END ADC4_MspInit 0 */
     /* Peripheral clock enable */
-    HAL_RCC_ADC12_CLK_ENABLED++;
-    if(HAL_RCC_ADC12_CLK_ENABLED==1){
-      __HAL_RCC_ADC12_CLK_ENABLE();
-    }
+    __HAL_RCC_ADC34_CLK_ENABLE();
 
-    __HAL_RCC_GPIOA_CLK_ENABLE();
-    /**ADC2 GPIO Configuration
-    PA6     ------> ADC2_IN3
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    /**ADC4 GPIO Configuration
+    PB12     ------> ADC4_IN3
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_6;
+    GPIO_InitStruct.Pin = GPIO_PIN_12;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
-    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /* USER CODE BEGIN ADC2_MspInit 1 */
+  /* USER CODE BEGIN ADC4_MspInit 1 */
 
-  /* USER CODE END ADC2_MspInit 1 */
+  /* USER CODE END ADC4_MspInit 1 */
   }
 
 }
@@ -152,10 +144,7 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
 
   /* USER CODE END ADC1_MspDeInit 0 */
     /* Peripheral clock disable */
-    HAL_RCC_ADC12_CLK_ENABLED--;
-    if(HAL_RCC_ADC12_CLK_ENABLED==0){
-      __HAL_RCC_ADC12_CLK_DISABLE();
-    }
+    __HAL_RCC_ADC12_CLK_DISABLE();
 
     /**ADC1 GPIO Configuration
     PA0     ------> ADC1_IN1
@@ -166,25 +155,22 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
 
   /* USER CODE END ADC1_MspDeInit 1 */
   }
-  else if(hadc->Instance==ADC2)
+  else if(hadc->Instance==ADC4)
   {
-  /* USER CODE BEGIN ADC2_MspDeInit 0 */
+  /* USER CODE BEGIN ADC4_MspDeInit 0 */
 
-  /* USER CODE END ADC2_MspDeInit 0 */
+  /* USER CODE END ADC4_MspDeInit 0 */
     /* Peripheral clock disable */
-    HAL_RCC_ADC12_CLK_ENABLED--;
-    if(HAL_RCC_ADC12_CLK_ENABLED==0){
-      __HAL_RCC_ADC12_CLK_DISABLE();
-    }
+    __HAL_RCC_ADC34_CLK_DISABLE();
 
-    /**ADC2 GPIO Configuration
-    PA6     ------> ADC2_IN3
+    /**ADC4 GPIO Configuration
+    PB12     ------> ADC4_IN3
     */
-    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_6);
+    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_12);
 
-  /* USER CODE BEGIN ADC2_MspDeInit 1 */
+  /* USER CODE BEGIN ADC4_MspDeInit 1 */
 
-  /* USER CODE END ADC2_MspDeInit 1 */
+  /* USER CODE END ADC4_MspDeInit 1 */
   }
 
 }
@@ -198,25 +184,31 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
 void HAL_OPAMP_MspInit(OPAMP_HandleTypeDef* hopamp)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-  if(hopamp->Instance==OPAMP2)
+  if(hopamp->Instance==OPAMP4)
   {
-  /* USER CODE BEGIN OPAMP2_MspInit 0 */
+  /* USER CODE BEGIN OPAMP4_MspInit 0 */
 
-  /* USER CODE END OPAMP2_MspInit 0 */
+  /* USER CODE END OPAMP4_MspInit 0 */
 
     __HAL_RCC_GPIOA_CLK_ENABLE();
-    /**OPAMP2 GPIO Configuration
-    PA6     ------> OPAMP2_VOUT
-    PA7     ------> OPAMP2_VINP
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    /**OPAMP4 GPIO Configuration
+    PA4     ------> OPAMP4_VINP
+    PB12     ------> OPAMP4_VOUT
     */
-    GPIO_InitStruct.Pin = GPIO_PIN_6|GPIO_PIN_7;
+    GPIO_InitStruct.Pin = GPIO_PIN_4;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /* USER CODE BEGIN OPAMP2_MspInit 1 */
+    GPIO_InitStruct.Pin = GPIO_PIN_12;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /* USER CODE END OPAMP2_MspInit 1 */
+  /* USER CODE BEGIN OPAMP4_MspInit 1 */
+
+  /* USER CODE END OPAMP4_MspInit 1 */
   }
 
 }
@@ -229,21 +221,23 @@ void HAL_OPAMP_MspInit(OPAMP_HandleTypeDef* hopamp)
 */
 void HAL_OPAMP_MspDeInit(OPAMP_HandleTypeDef* hopamp)
 {
-  if(hopamp->Instance==OPAMP2)
+  if(hopamp->Instance==OPAMP4)
   {
-  /* USER CODE BEGIN OPAMP2_MspDeInit 0 */
+  /* USER CODE BEGIN OPAMP4_MspDeInit 0 */
 
-  /* USER CODE END OPAMP2_MspDeInit 0 */
+  /* USER CODE END OPAMP4_MspDeInit 0 */
 
-    /**OPAMP2 GPIO Configuration
-    PA6     ------> OPAMP2_VOUT
-    PA7     ------> OPAMP2_VINP
+    /**OPAMP4 GPIO Configuration
+    PA4     ------> OPAMP4_VINP
+    PB12     ------> OPAMP4_VOUT
     */
-    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_6|GPIO_PIN_7);
+    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_4);
 
-  /* USER CODE BEGIN OPAMP2_MspDeInit 1 */
+    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_12);
 
-  /* USER CODE END OPAMP2_MspDeInit 1 */
+  /* USER CODE BEGIN OPAMP4_MspDeInit 1 */
+
+  /* USER CODE END OPAMP4_MspDeInit 1 */
   }
 
 }

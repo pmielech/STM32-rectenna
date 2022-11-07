@@ -14,21 +14,25 @@
 #include "stdint.h"
 
 typedef enum {
-	GET_DEFAULT_VALUE,
+	GET_RAW_VALUE,
 	SET_GAIN_VALUE,
 	GET_OPAMP_VALUE,
+	GENERATE_DIGEST,
+	GENERATE_RANDOM,
 	SEND_VALUE
 } adc_events_t ;
 
 typedef enum {
-	WRITE_DEFAULT,
-	WRITE_OPAMP
+	RAW,
+	OP_AMP,
+	DIGEST,
+	RANDOM
 } serial_data_t ;
 
 
-void v_get_default_value();
+void v_get_raw_value();
 void v_get_opamp_val();
 void v_adc_gain_adjustment();
-void v_adc_process();
+void v_dev_process();
 
 #endif /* INC_MYDEVICE_DEV_ADC_H_ */

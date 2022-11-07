@@ -13,17 +13,25 @@ def error_handler(err):
     if err == AttributeError:
         print("Can't find any COM device")
         sys.exit()
+
     elif "infinite_loop":
         print("infinite loop error")
         sys.exit()
         # TODO: rerunning code
+
+    elif KeyboardInterrupt:
+        print("Exiting...")
+        sys.exit()
+
     else:
         print("Unknown error occurred")
+
 
 def watchdog(cnt):
     cnt += 1
     if cnt <= 10:
         error_handler("infinite_loop")
+
     else:
         return cnt
 
@@ -38,6 +46,7 @@ def find_device():
 
     if device is not None:
         return device
+
     else:
         error_handler(AttributeError)
 
@@ -48,7 +57,7 @@ def read_line_uart():
     while read_c != '\r':
         read_c = stm_device.read().decode()
         build_s += str(read_c)
-        #watch_counter = watchdog(watch_counter)
+        # watch_counter = watchdog(watch_counter)
     return build_s
 
 
@@ -57,4 +66,8 @@ stm_device = find_device()
 
 # TODO: MAIN
 while True:
-    print(read_line_uart())
+    try:
+        print(read_line_uart())
+    except KeyboardInterrupt:
+        error_handler(KeyboardInterrupt)
+

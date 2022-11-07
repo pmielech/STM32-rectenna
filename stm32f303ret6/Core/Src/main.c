@@ -45,9 +45,9 @@
 
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
-ADC_HandleTypeDef hadc2;
+ADC_HandleTypeDef hadc4;
 
-OPAMP_HandleTypeDef hopamp2;
+OPAMP_HandleTypeDef hopamp4;
 
 UART_HandleTypeDef huart2;
 
@@ -61,8 +61,8 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_ADC1_Init(void);
-static void MX_ADC2_Init(void);
-static void MX_OPAMP2_Init(void);
+static void MX_OPAMP4_Init(void);
+static void MX_ADC4_Init(void);
 /* USER CODE BEGIN PFP */
 void uCustom_gain(uint8_t gain);
 
@@ -106,18 +106,18 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   MX_ADC1_Init();
-  MX_ADC2_Init();
-  MX_OPAMP2_Init();
+  MX_OPAMP4_Init();
+  MX_ADC4_Init();
   /* USER CODE BEGIN 2 */
 
   HAL_ADCEx_Calibration_Start(&hadc1, HAL_MAX_DELAY);
   HAL_ADC_Start(&hadc1);
 
-  HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED);
-  HAL_ADC_Start(&hadc2);
+  HAL_ADCEx_Calibration_Start(&hadc4, ADC_SINGLE_ENDED);
+  HAL_ADC_Start(&hadc4);
 
-  HAL_OPAMP_SelfCalibrate(&hopamp2);
-  HAL_OPAMP_Start(&hopamp2);
+  HAL_OPAMP_SelfCalibrate(&hopamp4);
+  HAL_OPAMP_Start(&hopamp4);
 
 
   /* USER CODE END 2 */
@@ -126,7 +126,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  v_adc_process();
+	  v_dev_process();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -173,9 +173,11 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_ADC12;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART2|RCC_PERIPHCLK_ADC12
+                              |RCC_PERIPHCLK_ADC34;
   PeriphClkInit.Usart2ClockSelection = RCC_USART2CLKSOURCE_PCLK1;
   PeriphClkInit.Adc12ClockSelection = RCC_ADC12PLLCLK_DIV1;
+  PeriphClkInit.Adc34ClockSelection = RCC_ADC34PLLCLK_DIV1;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
@@ -249,40 +251,40 @@ static void MX_ADC1_Init(void)
 }
 
 /**
-  * @brief ADC2 Initialization Function
+  * @brief ADC4 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_ADC2_Init(void)
+static void MX_ADC4_Init(void)
 {
 
-  /* USER CODE BEGIN ADC2_Init 0 */
+  /* USER CODE BEGIN ADC4_Init 0 */
 
-  /* USER CODE END ADC2_Init 0 */
+  /* USER CODE END ADC4_Init 0 */
 
   ADC_ChannelConfTypeDef sConfig = {0};
 
-  /* USER CODE BEGIN ADC2_Init 1 */
+  /* USER CODE BEGIN ADC4_Init 1 */
 
-  /* USER CODE END ADC2_Init 1 */
+  /* USER CODE END ADC4_Init 1 */
 
   /** Common config
   */
-  hadc2.Instance = ADC2;
-  hadc2.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
-  hadc2.Init.Resolution = ADC_RESOLUTION_12B;
-  hadc2.Init.ScanConvMode = ADC_SCAN_DISABLE;
-  hadc2.Init.ContinuousConvMode = ENABLE;
-  hadc2.Init.DiscontinuousConvMode = DISABLE;
-  hadc2.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-  hadc2.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-  hadc2.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc2.Init.NbrOfConversion = 1;
-  hadc2.Init.DMAContinuousRequests = DISABLE;
-  hadc2.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
-  hadc2.Init.LowPowerAutoWait = DISABLE;
-  hadc2.Init.Overrun = ADC_OVR_DATA_OVERWRITTEN;
-  if (HAL_ADC_Init(&hadc2) != HAL_OK)
+  hadc4.Instance = ADC4;
+  hadc4.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
+  hadc4.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc4.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc4.Init.ContinuousConvMode = ENABLE;
+  hadc4.Init.DiscontinuousConvMode = DISABLE;
+  hadc4.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc4.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc4.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc4.Init.NbrOfConversion = 1;
+  hadc4.Init.DMAContinuousRequests = DISABLE;
+  hadc4.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  hadc4.Init.LowPowerAutoWait = DISABLE;
+  hadc4.Init.Overrun = ADC_OVR_DATA_OVERWRITTEN;
+  if (HAL_ADC_Init(&hadc4) != HAL_OK)
   {
     Error_Handler();
   }
@@ -295,45 +297,45 @@ static void MX_ADC2_Init(void)
   sConfig.SamplingTime = ADC_SAMPLETIME_7CYCLES_5;
   sConfig.OffsetNumber = ADC_OFFSET_NONE;
   sConfig.Offset = 0;
-  if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
+  if (HAL_ADC_ConfigChannel(&hadc4, &sConfig) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN ADC2_Init 2 */
+  /* USER CODE BEGIN ADC4_Init 2 */
 
-  /* USER CODE END ADC2_Init 2 */
+  /* USER CODE END ADC4_Init 2 */
 
 }
 
 /**
-  * @brief OPAMP2 Initialization Function
+  * @brief OPAMP4 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_OPAMP2_Init(void)
+static void MX_OPAMP4_Init(void)
 {
 
-  /* USER CODE BEGIN OPAMP2_Init 0 */
+  /* USER CODE BEGIN OPAMP4_Init 0 */
 
-  /* USER CODE END OPAMP2_Init 0 */
+  /* USER CODE END OPAMP4_Init 0 */
 
-  /* USER CODE BEGIN OPAMP2_Init 1 */
+  /* USER CODE BEGIN OPAMP4_Init 1 */
 
-  /* USER CODE END OPAMP2_Init 1 */
-  hopamp2.Instance = OPAMP2;
-  hopamp2.Init.Mode = OPAMP_PGA_MODE;
-  hopamp2.Init.NonInvertingInput = OPAMP_NONINVERTINGINPUT_IO0;
-  hopamp2.Init.TimerControlledMuxmode = OPAMP_TIMERCONTROLLEDMUXMODE_DISABLE;
-  hopamp2.Init.PgaConnect = OPAMP_PGA_CONNECT_INVERTINGINPUT_NO;
-  hopamp2.Init.PgaGain = OPAMP_PGA_GAIN_2;
-  hopamp2.Init.UserTrimming = OPAMP_TRIMMING_FACTORY;
-  if (HAL_OPAMP_Init(&hopamp2) != HAL_OK)
+  /* USER CODE END OPAMP4_Init 1 */
+  hopamp4.Instance = OPAMP4;
+  hopamp4.Init.Mode = OPAMP_PGA_MODE;
+  hopamp4.Init.NonInvertingInput = OPAMP_NONINVERTINGINPUT_IO2;
+  hopamp4.Init.TimerControlledMuxmode = OPAMP_TIMERCONTROLLEDMUXMODE_DISABLE;
+  hopamp4.Init.PgaConnect = OPAMP_PGA_CONNECT_INVERTINGINPUT_NO;
+  hopamp4.Init.PgaGain = OPAMP_PGA_GAIN_2;
+  hopamp4.Init.UserTrimming = OPAMP_TRIMMING_FACTORY;
+  if (HAL_OPAMP_Init(&hopamp4) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN OPAMP2_Init 2 */
+  /* USER CODE BEGIN OPAMP4_Init 2 */
 
-  /* USER CODE END OPAMP2_Init 2 */
+  /* USER CODE END OPAMP4_Init 2 */
 
 }
 
@@ -384,22 +386,13 @@ static void MX_GPIO_Init(void)
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(ledProcess_GPIO_Port, ledProcess_Pin, GPIO_PIN_RESET);
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin : userButt_Pin */
   GPIO_InitStruct.Pin = userButt_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(userButt_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : ledProcess_Pin */
-  GPIO_InitStruct.Pin = ledProcess_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(ledProcess_GPIO_Port, &GPIO_InitStruct);
 
 }
 
