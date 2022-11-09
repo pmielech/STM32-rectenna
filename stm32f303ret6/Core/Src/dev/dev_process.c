@@ -5,7 +5,7 @@
  *      Author: patryk
  */
 
-#include "dev/dev_adc.h"
+#include <dev/dev_process.h>
 #include "dev/dev_opamp2_custom_gain.h"
 #include "dev/sha256.h"
 
@@ -62,7 +62,7 @@ void vGenerate_random() {
 }
 
 
-void v_get_raw_value() {
+void vGet_raw_value() {
 
 	//adc pA_0
 	HAL_ADC_Start(&hadc1);
@@ -71,7 +71,7 @@ void v_get_raw_value() {
 
 }
 
-void v_get_opamp_val() {
+void vGet_opamp_val() {
 
 	//opamp pA_2
 	opampVal = (uint8_t*)HAL_ADC_GetValue(&hadc4);
@@ -83,19 +83,19 @@ void vGenerete_digest(){
 }
 
 
-void v_adc_gain_adjustment() {
+void vGain_adjustment() {
 
 	if(*rawVal < 256) {
-		v_custom_gain(16);
+		vCustom_gain(16);
 	}
 	else if(*rawVal >= 256 && *rawVal < 512) {
-		v_custom_gain(8);
+		vCustom_gain(8);
 	}
 	else if(*rawVal >= 512 && *rawVal < 1024) {
-		v_custom_gain(4);
+		vCustom_gain(4);
 	}
 	else if(*rawVal >= 1024) {
-		v_custom_gain(2);
+		vCustom_gain(2);
 	}
 }
 
@@ -128,22 +128,22 @@ void vSerial_port_write(serial_data_t serial_data_type) {
 }
 
 
-void v_dev_process() {
+void vDev_process() {
 
 	switch(adc_event_handler) {
 
 	case GET_RAW_VALUE:
-		v_get_raw_value();
+		vGet_raw_value();
 		adc_event_handler = SET_GAIN_VALUE;
 		break;
 
 	case SET_GAIN_VALUE:
-		v_adc_gain_adjustment();
+		vGain_adjustment();
 		adc_event_handler = GET_OPAMP_VALUE;
 		break;
 
 	case GET_OPAMP_VALUE:
-		v_get_opamp_val();
+		vGet_opamp_val();
 		adc_event_handler = GENERATE_DIGEST;
 		break;
 

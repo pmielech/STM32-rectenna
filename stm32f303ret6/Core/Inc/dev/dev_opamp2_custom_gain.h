@@ -10,7 +10,6 @@
 
 #include "stdint.h"
 
-void v_adc_gain_adjustment();
-void v_custom_gain(uint8_t newGain);
+void vCustom_gain(uint8_t newGain);
 
 #endif /* INC_MYDEVICE_OPAMP2_CUSTOM_GAIN_H_ */

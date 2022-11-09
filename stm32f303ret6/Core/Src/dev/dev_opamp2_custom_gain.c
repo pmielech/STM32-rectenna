@@ -11,9 +11,10 @@
 void Error_Handler(void);
 extern OPAMP_HandleTypeDef hopamp4;
 
-void v_custom_gain(uint8_t newGain) {
+void vCustom_gain(uint8_t newGain) {
 
 	switch(newGain) {
+
 	case 2:
 		hopamp4.Init.PgaGain = OPAMP_PGA_GAIN_2;
 		//TODO: check assert_param

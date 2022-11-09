@@ -17,12 +17,12 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
+#include <dev/dev_process.h>
 #include "main.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "dev/dev_opamp2_custom_gain.h"
-#include "dev/dev_adc.h"
 #include "dev/dev_hash.h"
 
 #include "string.h"
@@ -126,7 +126,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  v_dev_process();
+	  vDev_process();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

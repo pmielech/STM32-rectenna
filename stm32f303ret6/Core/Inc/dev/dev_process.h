@@ -30,9 +30,9 @@ typedef enum {
 } serial_data_t ;
 
 
-void v_get_raw_value();
-void v_get_opamp_val();
-void v_adc_gain_adjustment();
-void v_dev_process();
+void vGet_raw_value();
+void vGet_opamp_val();
+void vGain_adjustment();
+void vDev_process();
 
 #endif /* INC_MYDEVICE_DEV_ADC_H_ */

@@ -5,8 +5,8 @@
    ---------------------------------------------------------
 */
 
+#include <dev/dev_process.h>
 #include "dev/lfsr113.h"
-#include "dev/dev_adc.h"
 
 
 /**** VERY IMPORTANT **** :
