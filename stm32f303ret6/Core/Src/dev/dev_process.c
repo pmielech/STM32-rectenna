@@ -16,16 +16,18 @@
 
 #include "stdio.h"
 
-extern ADC_HandleTypeDef hadc1;
-extern ADC_HandleTypeDef hadc4;
-extern UART_HandleTypeDef huart2;
-
 static uint8_t *rawVal;
 static uint8_t *opampVal;
 static adc_events_t adc_event_handler = 0;
 static uint8_t *Digest = 0;
 
 static uint32_t randomGenerated = 0;
+static uint8_t caseBreaker = 0;
+
+
+extern ADC_HandleTypeDef hadc1;
+extern ADC_HandleTypeDef hadc4;
+extern UART_HandleTypeDef huart2;
 
 extern uint32_t z1;
 extern uint32_t z2;
@@ -158,8 +160,13 @@ void vDev_process() {
 		break;
 
 	case SEND_VALUE:
+
 		vSerial_port_write(RANDOM);
 		adc_event_handler = GET_RAW_VALUE;
+		break;
+
+	default:
+		caseBreaker++;
 		break;
 	}
 }

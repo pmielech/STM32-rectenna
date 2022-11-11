@@ -17,13 +17,11 @@
   */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include <dev/dev_process.h>
 #include "main.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "dev/dev_opamp2_custom_gain.h"
-#include "dev/dev_hash.h"
+#include <dev/dev_process.h>
 
 #include "string.h"
 #include "stdio.h"
@@ -52,6 +50,8 @@ OPAMP_HandleTypeDef hopamp4;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+static time_t Timestamp;
+static time_t GetTick;
 
 
 /* USER CODE END PV */
@@ -64,14 +64,19 @@ static void MX_ADC1_Init(void);
 static void MX_OPAMP4_Init(void);
 static void MX_ADC4_Init(void);
 /* USER CODE BEGIN PFP */
-void uCustom_gain(uint8_t gain);
-
-
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+static void vSystem_counter(){
+	GetTick = HAL_GetTick();
+	if(GetTick - Timestamp > 100){
+		vDev_process();
+		Timestamp = HAL_GetTick();
+	}
+}
 
 
 /* USER CODE END 0 */
@@ -119,18 +124,18 @@ int main(void)
   HAL_OPAMP_SelfCalibrate(&hopamp4);
   HAL_OPAMP_Start(&hopamp4);
 
-
+  Timestamp = HAL_GetTick();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  vDev_process();
+	  vSystem_counter();
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  HAL_Delay(200);
   }
   /* USER CODE END 3 */
 }

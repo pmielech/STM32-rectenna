@@ -1,12 +1,36 @@
 import serial
 # https://pyserial.readthedocs.io/en/latest/shortintro.html
 from serial.tools import list_ports
-import time
+from datetime import datetime
 import sys
+import matplotlib.pyplot as plt
+import csv
 
 PORT_TYPE = "usbmodem"  # com port
 BAUD_RATE = ''
 watch_counter = 0
+num_counter = 0
+
+randNumbers = []
+
+
+def rand_hist_plot():
+    global num_counter
+    if num_counter % 20 == 0:
+        plt.hist(randNumbers, align='left')     # edgecolor='black'
+        plt.xlabel('Wartości liczb')
+        plt.ylabel('Częstotliwość występowania')
+        plt.grid(True)
+        if num_counter % 60 == 0:
+            save_data()
+        plt.show()
+
+    else:
+        return
+
+
+def add_random(uart_read):
+    randNumbers.append(int(uart_read[2:]))
 
 
 def error_handler(err):
@@ -52,13 +76,26 @@ def find_device():
 
 
 def read_line_uart():
+    global num_counter
     build_s = ""
     read_c = ""
     while read_c != '\r':
         read_c = stm_device.read().decode()
         build_s += str(read_c)
-        # watch_counter = watchdog(watch_counter)
+
+    if build_s[0] == 'R':
+        add_random(build_s)
+        num_counter += 1
+
     return build_s
+
+
+def save_data():
+    test_time = datetime.now().strftime("%y_%m_%d")
+    csv_file = open('tests/' + test_time + ".csv", 'a')
+    csv.writer(csv_file).writerow(randNumbers)
+    csv_file.close()
+    plt.savefig('tests/' + test_time + '.pdf')
 
 
 # TODO: INIT
@@ -66,8 +103,5 @@ stm_device = find_device()
 
 # TODO: MAIN
 while True:
-    try:
-        print(read_line_uart())
-    except KeyboardInterrupt:
-        error_handler(KeyboardInterrupt)
-
+    print(read_line_uart())
+    rand_hist_plot()
