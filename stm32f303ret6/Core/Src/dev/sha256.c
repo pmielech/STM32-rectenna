@@ -363,7 +363,7 @@ static uint8_t *extract_digest(uint32_t *Hash)
 	uint8_t *Digest;
 	
 	//Allocate memory for digest pointer
-	Digest = (uint8_t *)malloc(32 * sizeof(uint8_t));
+	Digest = (uint8_t *)malloc(40 * sizeof(uint8_t));
 	
 	//Prepare digest for return
 	for(uint32_t i = 0; i < 32; i += 4)

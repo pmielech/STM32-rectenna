@@ -6,18 +6,19 @@ import sys
 import matplotlib.pyplot as plt
 import csv
 
-PORT_TYPE = "usbmodem"  # com port
+PORT_TYPE = "usbmodem"  # or com port, depends on os
 BAUD_RATE = ''
 watch_counter = 0
 num_counter = 0
-
+nums_saved = set([])
+to_save = []
 randNumbers = []
 
 
 def rand_hist_plot():
     global num_counter
     if num_counter % 20 == 0:
-        plt.hist(randNumbers, align='left')     # edgecolor='black'
+        plt.hist(randNumbers, align='left', bins=10, edgecolor='black', linewidth=1.2)
         plt.xlabel('Wartości liczb')
         plt.ylabel('Częstotliwość występowania')
         plt.grid(True)
@@ -30,7 +31,7 @@ def rand_hist_plot():
 
 
 def add_random(uart_read):
-    randNumbers.append(int(uart_read[2:]))
+    randNumbers.append(uart_read)
 
 
 def error_handler(err):
@@ -38,26 +39,12 @@ def error_handler(err):
         print("Can't find any COM device")
         sys.exit()
 
-    elif "infinite_loop":
-        print("infinite loop error")
-        sys.exit()
-        # TODO: rerunning code
-
     elif KeyboardInterrupt:
         print("Exiting...")
         sys.exit()
 
     else:
         print("Unknown error occurred")
-
-
-def watchdog(cnt):
-    cnt += 1
-    if cnt <= 10:
-        error_handler("infinite_loop")
-
-    else:
-        return cnt
 
 
 def find_device():
@@ -79,23 +66,38 @@ def read_line_uart():
     global num_counter
     build_s = ""
     read_c = ""
-    while read_c != '\r':
-        read_c = stm_device.read().decode()
-        build_s += str(read_c)
+    try:
+        while read_c != '\r':
+            read_c = stm_device.read().decode()
+            build_s += str(read_c)
+    except:
+        print("Failed to read the uart")
 
-    if build_s[0] == 'R':
-        add_random(build_s)
-        num_counter += 1
-
+    try:
+        build_s = build_s[2:].rsplit('\n\r')
+        build_s = int(build_s[0])
+    except:
+        print("Failed to convert the data")
+        return
+    add_random(build_s)
+    num_counter += 1
     return build_s
 
 
 def save_data():
+    global to_save
+    global nums_saved
+    to_save = set(randNumbers)
+    try:
+        to_save = to_save.difference(nums_saved)
+    except:
+        pass
     test_time = datetime.now().strftime("%y_%m_%d")
-    csv_file = open('tests/' + test_time + ".csv", 'a')
-    csv.writer(csv_file).writerow(randNumbers)
-    csv_file.close()
+    with open('tests/' + test_time + ".csv", 'a') as csv_file:
+        csv.writer(csv_file).writerows([to_save])
+
     plt.savefig('tests/' + test_time + '.pdf')
+    nums_saved.update(to_save)
 
 
 # TODO: INIT

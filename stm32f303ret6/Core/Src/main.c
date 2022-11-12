@@ -72,7 +72,7 @@ static void MX_ADC4_Init(void);
 
 static void vSystem_counter(){
 	GetTick = HAL_GetTick();
-	if(GetTick - Timestamp > 100){
+	if(GetTick - Timestamp > 20){
 		vDev_process();
 		Timestamp = HAL_GetTick();
 	}
