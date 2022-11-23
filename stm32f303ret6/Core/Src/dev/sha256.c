@@ -178,115 +178,7 @@ static uint8_t create_schedule_array_data(uint8_t *Data, uint64_t DataSizeByte, 
 		return 1;
 }
 /******************************************************************************/
-//Take data and partially fills the schedule array (w[0] to w[15]). Return 1 on
-// success and 0 if it ends or fail.
-static uint8_t create_schedule_array_file(FILE *File_fp, uint64_t DataSizeByte, uint32_t *W)
-{
-	//Checking for file/data size limit
-	if((0xFFFFFFFFFFFFFFFF / 8) < DataSizeByte)
-	{
-		printf("Error! File/Data exceeds size limit of 20097152 TiB");
-		exit(EXIT_FAILURE);
-	}
 
-	//Starting with all data + 1 ending byte + 8 size byte
-	uint8_t			TmpBlock[64];
-	uint8_t			IsFinishedFlag = 0;
-	static uint8_t	SetEndOnNextBlockFlag = 0;
-	static uint8_t	RemainingDataFlag = 1;
-	
-	uint8_t	BytesRead;
-	
-	//Clear schedule array before use
-	for(uint8_t i = 0; i < 64; i++)
-	{
-		W[i] = 0x0;
-		TmpBlock[i] = 0x0; //Necessary for 0 padding on last block
-	}	
-	
-	//Creating 512 bits (64 bytes, 16 uint32_t) block with ending byte, padding
-	// and data size
-	for(int8_t i = 0; i < 64; i++)
-	{
-		if(RemainingDataFlag == 1)
-		{
-			if((BytesRead = fread(TmpBlock, sizeof(uint8_t), BLOCK_SIZE_BYTE, File_fp)) != BLOCK_SIZE_BYTE)
-			{
-				RemainingDataFlag = 0;
-				i = BytesRead - 1;
-			}
-			else
-				goto outside1;
-			
-			if(RemainingDataFlag == 0) //Data ends before the end of the block
-			{
-				if(i < 63)
-				{
-					i++;
-					TmpBlock[i] = 0x80;
-					if(i < 56)
-					{
-						//64 bits data size in bits with big endian representation
-						uint64_t DataSizeBits = DataSizeByte * 8;
-						TmpBlock[56] = (DataSizeBits >> 56) & 0x00000000000000FF;
-						TmpBlock[57] = (DataSizeBits >> 48) & 0x00000000000000FF;
-						TmpBlock[58] = (DataSizeBits >> 40) & 0x00000000000000FF;
-						TmpBlock[59] = (DataSizeBits >> 32) & 0x00000000000000FF;
-						TmpBlock[60] = (DataSizeBits >> 24) & 0x00000000000000FF;
-						TmpBlock[61] = (DataSizeBits >> 16) & 0x00000000000000FF;
-						TmpBlock[62] = (DataSizeBits >> 8) & 0x00000000000000FF;
-						TmpBlock[63] = DataSizeBits & 0x00000000000000FF;
-						RemainingDataFlag = 1;
-						IsFinishedFlag = 1;
-						goto outside1;
-					}
-					else //Block canot hold 64 bits data size value
-						goto outside1;
-				}
-				else //Last element of data is the last element on block
-				{
-					SetEndOnNextBlockFlag = 1;
-				}
-			}
-		}
-		else
-		{
-			if((SetEndOnNextBlockFlag == 1) && (i == 0))
-			{
-				TmpBlock[i] = 0x80;
-				SetEndOnNextBlockFlag = 0;
-			}
-			uint64_t DataSizeBits = DataSizeByte * 8;
-			TmpBlock[56] = (DataSizeBits >> 56) & 0x00000000000000FF;
-			TmpBlock[57] = (DataSizeBits >> 48) & 0x00000000000000FF;
-			TmpBlock[58] = (DataSizeBits >> 40) & 0x00000000000000FF;
-			TmpBlock[59] = (DataSizeBits >> 32) & 0x00000000000000FF;
-			TmpBlock[60] = (DataSizeBits >> 24) & 0x00000000000000FF;
-			TmpBlock[61] = (DataSizeBits >> 16) & 0x00000000000000FF;
-			TmpBlock[62] = (DataSizeBits >> 8) & 0x00000000000000FF;
-			TmpBlock[63] = DataSizeBits & 0x00000000000000FF;
-			RemainingDataFlag = 1;
-			IsFinishedFlag = 1;
-			goto outside1;
-		}
-	}
-	outside1:
-
-	//Filling the schedule array
-	for(uint8_t i = 0; i < 64; i += 4)
-	{
-		W[i/4] = (((uint32_t)TmpBlock[i]) << 24) |
-				 (((uint32_t)TmpBlock[i + 1]) << 16) |
-				 (((uint32_t)TmpBlock[i + 2]) << 8) |
-				 ((uint32_t)TmpBlock[i + 3]);
-	}
-
-	if(IsFinishedFlag == 1)
-		return 0;
-	else
-		return 1;
-}
-/******************************************************************************/
 static void complete_schedule_array(uint32_t *W)
 {
 	//add more 48 words of 32bit [w16 to w63]
@@ -363,7 +255,7 @@ static uint8_t *extract_digest(uint32_t *Hash)
 	uint8_t *Digest;
 	
 	//Allocate memory for digest pointer
-	Digest = (uint8_t *)malloc(40 * sizeof(uint8_t));
+	Digest = (uint8_t *)malloc(32 * sizeof(uint8_t));
 	
 	//Prepare digest for return
 	for(uint32_t i = 0; i < 32; i += 4)
@@ -371,7 +263,7 @@ static uint8_t *extract_digest(uint32_t *Hash)
 		Digest[i]   = (uint8_t)((Hash[i/4] >> 24) & 0x000000FF);
 		Digest[i+1] = (uint8_t)((Hash[i/4] >> 16) & 0x000000FF);
 		Digest[i+2] = (uint8_t)((Hash[i/4] >> 8) & 0x000000FF);
-		Digest[i+3] = (uint8_t)(Hash[i/4] & 0x000000FF);
+		Digest[i+3] = (uint8_t)((Hash[i/4] >> 0) & 0x000000FF);
 	}
 	
 	return Digest;

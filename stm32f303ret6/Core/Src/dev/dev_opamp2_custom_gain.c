@@ -17,8 +17,6 @@ void vCustom_gain(uint8_t newGain) {
 
 	case 2:
 		hopamp4.Init.PgaGain = OPAMP_PGA_GAIN_2;
-		//TODO: check assert_param
-		//assert_param(IS_OPAMP_PGA_GAIN(hopamp->Init.PgaGain));
 		break;
 
 	case 4:

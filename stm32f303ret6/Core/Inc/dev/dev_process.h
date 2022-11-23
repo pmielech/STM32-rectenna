@@ -14,9 +14,7 @@
 #include "stdint.h"
 
 typedef enum {
-	GET_RAW_VALUE,
-	SET_GAIN_VALUE,
-	GET_OPAMP_VALUE,
+	MEAS,
 	GENERATE_DIGEST,
 	GENERATE_RANDOM,
 	SEND_VALUE

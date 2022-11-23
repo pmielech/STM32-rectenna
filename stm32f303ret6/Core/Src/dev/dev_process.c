@@ -16,10 +16,13 @@
 
 #include "stdio.h"
 
+
+static uint32_t testOp;
+static uint32_t testRaw;
 static uint8_t *rawVal;
 static uint8_t *opampVal;
 static adc_events_t adc_event_handler = 0;
-static uint8_t *Digest = 0;
+static uint8_t *digestGenerated = 0;
 
 static uint32_t randomGenerated = 0;
 static uint8_t caseBreaker = 0;
@@ -44,19 +47,19 @@ int __io_putchar(int ch) {
 void vGenerate_random() {
 
 	for(int i = 0; i < 8; i++){
-		z1 += Digest[i];
+		z1 += digestGenerated[i];
 	}
 
 	for(int i = 8; i < 16; i++){
-			z2 += Digest[i];
+			z2 += digestGenerated[i];
 		}
 
 	for(int i = 16; i < 24; i++){
-			z3 += Digest[i];
+			z3 += digestGenerated[i];
 		}
 
 	for(int i = 24; i < 32; i++){
-			z4 += Digest[i];
+			z4 += digestGenerated[i];
 		}
 
 	 randomGenerated = lfsr113();
@@ -70,6 +73,8 @@ void vGet_raw_value() {
 	HAL_ADC_Start(&hadc1);
 	HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
   	rawVal = (uint8_t*)HAL_ADC_GetValue(&hadc1);
+  	testRaw = HAL_ADC_GetValue(&hadc1);
+
 
 }
 
@@ -77,11 +82,12 @@ void vGet_opamp_val() {
 
 	//opamp pA_2
 	opampVal = (uint8_t*)HAL_ADC_GetValue(&hadc4);
+	testOp = HAL_ADC_GetValue(&hadc4);
 
 }
 
 void vGenerete_digest(){
-	Digest = sha256_data(opampVal, sizeof(*opampVal));
+	digestGenerated = sha256_data(opampVal, sizeof(*opampVal));
 }
 
 
@@ -90,7 +96,7 @@ void vGain_adjustment() {
 	if(*rawVal < 256) {
 		vCustom_gain(16);
 	}
-	else if(*rawVal >= 256 && *rawVal < 512) {
+	if(*rawVal >= 256 && *rawVal < 512) {
 		vCustom_gain(8);
 	}
 	else if(*rawVal >= 512 && *rawVal < 1024) {
@@ -117,7 +123,7 @@ void vSerial_port_write(serial_data_t serial_data_type) {
 		printf("D: ");
 		for(int i  = 0; i < 32; i++)
 		{
-					printf("%02x", Digest[i]);
+					printf("%02x", digestGenerated[i]);
 		}
 		printf("\n\r");
 
@@ -134,18 +140,11 @@ void vDev_process() {
 
 	switch(adc_event_handler) {
 
-	case GET_RAW_VALUE:
+	case MEAS:
 		vGet_raw_value();
-		adc_event_handler = SET_GAIN_VALUE;
-		break;
-
-	case SET_GAIN_VALUE:
 		vGain_adjustment();
-		adc_event_handler = GET_OPAMP_VALUE;
-		break;
-
-	case GET_OPAMP_VALUE:
 		vGet_opamp_val();
+
 		adc_event_handler = GENERATE_DIGEST;
 		break;
 
@@ -162,7 +161,7 @@ void vDev_process() {
 	case SEND_VALUE:
 
 		vSerial_port_write(RANDOM);
-		adc_event_handler = GET_RAW_VALUE;
+		adc_event_handler = MEAS;
 		break;
 
 	default:
