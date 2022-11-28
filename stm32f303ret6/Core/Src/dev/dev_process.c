@@ -142,7 +142,7 @@ void vDev_process() {
 
 	case MEAS:
 		vGet_raw_value();
-		vGain_adjustment();
+		vGain_adjusstment();
 		vGet_opamp_val();
 
 		adc_event_handler = GENERATE_DIGEST;
