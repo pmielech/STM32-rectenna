@@ -27,6 +27,12 @@ typedef enum {
 	RANDOM
 } serial_data_t ;
 
+typedef enum {
+	SINGLE,
+	MULTIPLE,
+	MULTIPLE_RAND
+} record_meas_t ;
+
 
 void vGet_raw_value();
 void vGet_opamp_val();

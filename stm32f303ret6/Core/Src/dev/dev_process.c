@@ -17,6 +17,9 @@
 #include "stdio.h"
 
 
+static uint8_t array_cnt = 0;
+static uint8_t meas_complited = 0;
+static uint8_t *ValArray[32];
 static uint32_t testOp;
 static uint32_t testRaw;
 static uint8_t *rawVal;
@@ -66,6 +69,36 @@ void vGenerate_random() {
 
 }
 
+void vMulti_meas(serial_data_t dataType) {
+
+	switch(dataType){
+
+	case OP_AMP:
+
+			vGet_raw_value();
+			vGain_adjustment();
+			vGet_opamp_val();
+			ValArray[array_cnt] = opampVal;
+			//20-100 ms
+
+			if(array_cnt == 31){
+				meas_complited = 1;
+				array_cnt = 0;
+			}
+			else{
+				array_cnt++;
+			}
+
+
+		break;
+
+	default:
+		break;
+
+	}
+
+
+}
 
 void vGet_raw_value() {
 
@@ -141,11 +174,12 @@ void vDev_process() {
 	switch(adc_event_handler) {
 
 	case MEAS:
-		vGet_raw_value();
-		vGain_adjusstment();
-		vGet_opamp_val();
+		vMulti_meas(OP_AMP);
 
-		adc_event_handler = GENERATE_DIGEST;
+		if(meas_complited == 1){
+			adc_event_handler = GENERATE_DIGEST;
+		}
+
 		break;
 
 	case GENERATE_DIGEST:
