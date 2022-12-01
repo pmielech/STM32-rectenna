@@ -11,8 +11,7 @@
 //Return 32 bytes digest of Data array on success. Return NULL if fail.
 //VerboseStatus = SHA256_VERBOSE --> Will print progress
 //VerboseStatus = SHA256_NOT_VERBOSE --> Will not print progress
-uint8_t *sha256_data(uint8_t *Data, uint64_t DataSizeByte);
-
+void sha256_data(uint8_t *Data, uint64_t DataSizeByte);
 
 
 #endif

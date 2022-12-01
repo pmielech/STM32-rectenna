@@ -10,11 +10,14 @@
 #include <sys/stat.h>
 
 #include "dev/sha256.h"
+#include <dev/dev_process.h>
 
 #define DEBUG_FLAG			0
 
 #define BLOCK_SIZE_BYTE		64
 
+
+uint8_t *Digest;
 
 //==============================================================================
 //                 HELPER FUNCTIONS
@@ -250,23 +253,19 @@ static void compression(uint32_t *Hash, uint32_t *W)
 	Hash[7] += TmpHash[h];	
 }
 /******************************************************************************/
-static uint8_t *extract_digest(uint32_t *Hash)
+static void extract_digest(uint32_t *Hash)
 {
-	uint8_t *Digest;
-	
-	//Allocate memory for digest pointer
-	Digest = (uint8_t *)malloc(32 * sizeof(uint8_t));
-	
-	//Prepare digest for return
+
+
 	for(uint32_t i = 0; i < 32; i += 4)
 	{
-		Digest[i]   = (uint8_t)((Hash[i/4] >> 24) & 0x000000FF);
-		Digest[i+1] = (uint8_t)((Hash[i/4] >> 16) & 0x000000FF);
-		Digest[i+2] = (uint8_t)((Hash[i/4] >> 8) & 0x000000FF);
-		Digest[i+3] = (uint8_t)((Hash[i/4] >> 0) & 0x000000FF);
+		Digest[i]   = ((Hash[i/4] >> 24) & 0x000000FF);
+		Digest[i+1] = ((Hash[i/4] >> 16) & 0x000000FF);
+		Digest[i+2] = ((Hash[i/4] >> 8) & 0x000000FF);
+		Digest[i+3] = ((Hash[i/4]) & 0x000000FF);
 	}
 	
-	return Digest;
+
 }
 								
 //==============================================================================
@@ -275,20 +274,19 @@ static uint8_t *extract_digest(uint32_t *Hash)
 //Return 32 bytes digest of Data on success. Return NULL if fail.
 //VerboseStatus = SHA256_VERBOSE --> Will print progress
 //VerboseStatus = SHA256_NOT_VERBOSE --> Will not print progress
-uint8_t *sha256_data(uint8_t *Data, uint64_t DataSizeByte)
+void sha256_data(uint8_t *Data, uint64_t DataSizeByte)
 {	
 	
 	//schedule array
 	uint32_t	W[64];
-	
+
 	//H -> Block hash ; TmpH -> temporary hash in compression loop
 	//Temp1 and Temp2 are auxiliar variable to calculate TmpH[]
-	uint32_t	Hash[8] = {0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
+	uint32_t Hash[8] = {0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
 						   0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19};
-	
-	//Hashed data
-	uint8_t *Digest;
-	
+
+
+
 	uint64_t RemainingDataSizeByte = DataSizeByte;
 	
 
@@ -303,8 +301,7 @@ uint8_t *sha256_data(uint8_t *Data, uint64_t DataSizeByte)
 	compression(Hash, W);
 
 
-	Digest = extract_digest(Hash);
+	extract_digest(Hash);
 	
 	
-	return Digest;
 }

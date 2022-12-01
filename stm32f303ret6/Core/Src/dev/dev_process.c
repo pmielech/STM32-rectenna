@@ -7,8 +7,8 @@
 
 #include <dev/dev_process.h>
 #include "dev/dev_opamp2_custom_gain.h"
-#include "dev/sha256.h"
 
+#include "dev/sha256.h"
 #include "dev/lfsr113.h"
 #include "dev/lfsr88.h"
 
@@ -17,6 +17,7 @@
 #include "stdio.h"
 
 
+static uint8_t meas_idx = 0;
 static uint8_t array_cnt = 0;
 static uint8_t meas_complited = 0;
 static uint8_t *ValArray[32];
@@ -24,13 +25,16 @@ static uint32_t testOp;
 static uint32_t testRaw;
 static uint8_t *rawVal;
 static uint8_t *opampVal;
+static uint8_t *opampVal;
+static uint8_t *meas_value = 0;
+
+
 static adc_events_t adc_event_handler = 0;
-static uint8_t *digestGenerated = 0;
 
 static uint32_t randomGenerated = 0;
 static uint8_t caseBreaker = 0;
 
-
+extern uint8_t *Digest;
 extern ADC_HandleTypeDef hadc1;
 extern ADC_HandleTypeDef hadc4;
 extern UART_HandleTypeDef huart2;
@@ -50,19 +54,19 @@ int __io_putchar(int ch) {
 void vGenerate_random() {
 
 	for(int i = 0; i < 8; i++){
-		z1 += digestGenerated[i];
+		z1 += Digest[i];
 	}
 
 	for(int i = 8; i < 16; i++){
-			z2 += digestGenerated[i];
+			z2 += Digest[i];
 		}
 
 	for(int i = 16; i < 24; i++){
-			z3 += digestGenerated[i];
+			z3 += Digest[i];
 		}
 
 	for(int i = 24; i < 32; i++){
-			z4 += digestGenerated[i];
+			z4 += Digest[i];
 		}
 
 	 randomGenerated = lfsr113();
@@ -100,6 +104,29 @@ void vMulti_meas(serial_data_t dataType) {
 
 }
 
+void vChoose_Val(choose_meas_val_t variant){
+	switch(variant){
+	case CON:
+		meas_value = ValArray[meas_idx];
+		break;
+
+	case INC:
+		meas_value = ValArray[meas_idx];
+		meas_idx++;
+		break;
+
+	case RND:
+
+		//TODO: choose random array indexes
+
+	default:
+		meas_value = ValArray[meas_idx];
+		break;
+
+	}
+
+}
+
 void vGet_raw_value() {
 
 	//adc pA_0
@@ -120,7 +147,7 @@ void vGet_opamp_val() {
 }
 
 void vGenerete_digest(){
-	digestGenerated = sha256_data(opampVal, sizeof(*opampVal));
+	sha256_data(meas_value, sizeof(*meas_value));
 }
 
 
@@ -147,7 +174,7 @@ void vSerial_port_write(serial_data_t serial_data_type) {
 
 	}
 	if(serial_data_type == OP_AMP){
-		printf("O: %p\n\r", opampVal);
+		printf("O: %p\n\r", meas_value);
 
 	}
 
@@ -156,7 +183,7 @@ void vSerial_port_write(serial_data_t serial_data_type) {
 		printf("D: ");
 		for(int i  = 0; i < 32; i++)
 		{
-					printf("%02x", digestGenerated[i]);
+					printf("%02x", Digest[i]);
 		}
 		printf("\n\r");
 
@@ -183,6 +210,7 @@ void vDev_process() {
 		break;
 
 	case GENERATE_DIGEST:
+		vChoose_Val(CON);
 		vGenerete_digest();
 		adc_event_handler = GENERATE_RANDOM;
 		break;

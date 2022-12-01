@@ -33,6 +33,13 @@ typedef enum {
 	MULTIPLE_RAND
 } record_meas_t ;
 
+typedef enum {
+	CON,
+	INC,
+	RND
+} choose_meas_val_t ;
+
+
 
 void vGet_raw_value();
 void vGet_opamp_val();
