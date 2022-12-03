@@ -17,6 +17,13 @@
 #include "stdio.h"
 
 
+uint32_t teststr = 55;
+
+char DataString[5];
+
+
+extern uint8_t Digest[32];
+
 static uint8_t meas_idx = 0;
 static uint8_t array_cnt = 0;
 static uint8_t meas_complited = 0;
@@ -34,7 +41,7 @@ static adc_events_t adc_event_handler = 0;
 static uint32_t randomGenerated = 0;
 static uint8_t caseBreaker = 0;
 
-extern uint8_t *Digest;
+
 extern ADC_HandleTypeDef hadc1;
 extern ADC_HandleTypeDef hadc4;
 extern UART_HandleTypeDef huart2;
@@ -48,6 +55,24 @@ extern uint32_t z4;
 int __io_putchar(int ch) {
 	HAL_UART_Transmit(&huart2, (uint8_t*)&ch, 1, HAL_MAX_DELAY);
 	return 1;
+}
+
+static int iGet_string_length(char data[]){
+
+    int until_end_cnt = 0;
+
+    for(int i = 0; i <= 5; i++){
+        if( data[i] == '\0'){
+
+            return until_end_cnt;
+        }
+        else{
+            until_end_cnt ++;
+        }
+    }
+    return 0;
+
+
 }
 
 
@@ -108,6 +133,8 @@ void vChoose_Val(choose_meas_val_t variant){
 	switch(variant){
 	case CON:
 		meas_value = ValArray[meas_idx];
+		snprintf(DataString, 5, "%ld", teststr);
+
 		break;
 
 	case INC:
@@ -147,7 +174,7 @@ void vGet_opamp_val() {
 }
 
 void vGenerete_digest(){
-	sha256_data(meas_value, sizeof(*meas_value));
+	sha256_data((uint8_t*)DataString, iGet_string_length(DataString));
 }
 
 
@@ -222,7 +249,7 @@ void vDev_process() {
 
 	case SEND_VALUE:
 
-		vSerial_port_write(RANDOM);
+		vSerial_port_write(DIGEST);
 		adc_event_handler = MEAS;
 		break;
 
