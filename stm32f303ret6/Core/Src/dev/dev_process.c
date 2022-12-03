@@ -17,35 +17,30 @@
 #include "stdio.h"
 
 
-uint32_t teststr = 55;
-
-char DataString[5];
+static uint32_t teststr = 55;
 
 
-extern uint8_t Digest[32];
+static char DataString[5];
+
+static uint32_t ValArray[32];
+static uint32_t meas_value = 0;
+static uint32_t randomGenerated = 0;
+static uint32_t opampVal = 0;
+static uint32_t rawVal = 0;
 
 static uint8_t meas_idx = 0;
 static uint8_t array_cnt = 0;
 static uint8_t meas_complited = 0;
-static uint8_t *ValArray[32];
-static uint32_t testOp;
-static uint32_t testRaw;
-static uint8_t *rawVal;
-static uint8_t *opampVal;
-static uint8_t *opampVal;
-static uint8_t *meas_value = 0;
-
+static uint8_t caseBreaker = 0;
 
 static adc_events_t adc_event_handler = 0;
-
-static uint32_t randomGenerated = 0;
-static uint8_t caseBreaker = 0;
 
 
 extern ADC_HandleTypeDef hadc1;
 extern ADC_HandleTypeDef hadc4;
 extern UART_HandleTypeDef huart2;
 
+extern uint8_t Digest[32];
 extern uint32_t z1;
 extern uint32_t z2;
 extern uint32_t z3;
@@ -113,6 +108,7 @@ void vMulti_meas(serial_data_t dataType) {
 			if(array_cnt == 31){
 				meas_complited = 1;
 				array_cnt = 0;
+				meas_idx = 0;
 			}
 			else{
 				array_cnt++;
@@ -131,18 +127,16 @@ void vMulti_meas(serial_data_t dataType) {
 
 void vChoose_Val(choose_meas_val_t variant){
 	switch(variant){
-	case CON:
+	case CONST:
 		meas_value = ValArray[meas_idx];
-		snprintf(DataString, 5, "%ld", teststr);
-
 		break;
 
-	case INC:
+	case NEXT:
 		meas_value = ValArray[meas_idx];
 		meas_idx++;
 		break;
 
-	case RND:
+	case RANDM:
 
 		//TODO: choose random array indexes
 
@@ -152,6 +146,8 @@ void vChoose_Val(choose_meas_val_t variant){
 
 	}
 
+	snprintf(DataString, 5, "%ld", meas_value);
+
 }
 
 void vGet_raw_value() {
@@ -159,8 +155,7 @@ void vGet_raw_value() {
 	//adc pA_0
 	HAL_ADC_Start(&hadc1);
 	HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
-  	rawVal = (uint8_t*)HAL_ADC_GetValue(&hadc1);
-  	testRaw = HAL_ADC_GetValue(&hadc1);
+  	rawVal = HAL_ADC_GetValue(&hadc1);
 
 
 }
@@ -168,40 +163,43 @@ void vGet_raw_value() {
 void vGet_opamp_val() {
 
 	//opamp pA_2
-	opampVal = (uint8_t*)HAL_ADC_GetValue(&hadc4);
-	testOp = HAL_ADC_GetValue(&hadc4);
+	opampVal = HAL_ADC_GetValue(&hadc4);
+
 
 }
 
 void vGenerete_digest(){
+
 	sha256_data((uint8_t*)DataString, iGet_string_length(DataString));
+
 }
 
 
 void vGain_adjustment() {
 
-	if(*rawVal < 256) {
+	if(rawVal < 256) {
 		vCustom_gain(16);
 	}
-	if(*rawVal >= 256 && *rawVal < 512) {
+	if(rawVal >= 256 && rawVal < 512) {
 		vCustom_gain(8);
 	}
-	else if(*rawVal >= 512 && *rawVal < 1024) {
+	else if(rawVal >= 512 && rawVal < 1024) {
 		vCustom_gain(4);
 	}
-	else if(*rawVal >= 1024) {
+	else if(rawVal >= 1024) {
 		vCustom_gain(2);
 	}
 }
 
 
 void vSerial_port_write(serial_data_t serial_data_type) {
+
 	if(serial_data_type == RAW) {
-		printf("V: %p\n\r", rawVal);
+		printf("V: %ld\n\r", rawVal);
 
 	}
 	if(serial_data_type == OP_AMP){
-		printf("O: %p\n\r", meas_value);
+		printf("O: %ld\n\r", meas_value);
 
 	}
 
@@ -237,7 +235,7 @@ void vDev_process() {
 		break;
 
 	case GENERATE_DIGEST:
-		vChoose_Val(CON);
+		vChoose_Val(NEXT);
 		vGenerete_digest();
 		adc_event_handler = GENERATE_RANDOM;
 		break;

@@ -34,9 +34,9 @@ typedef enum {
 } record_meas_t ;
 
 typedef enum {
-	CON,
-	INC,
-	RND
+	CONST,
+	NEXT,
+	RANDM
 } choose_meas_val_t ;
 
 
