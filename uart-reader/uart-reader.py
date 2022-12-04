@@ -135,6 +135,10 @@ def connect_to_device():
     connection_lost = 0
 
 
+def program_state():
+
+    pass
+
 connect_to_device()
 
 while True:

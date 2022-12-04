@@ -10,14 +10,12 @@
 
 #include "dev/sha256.h"
 #include "dev/lfsr113.h"
-#include "dev/lfsr88.h"
 
 #include "stm32f3xx.h"
 
 #include "stdio.h"
+#include "stdlib.h"
 
-
-static uint32_t teststr = 55;
 
 
 static char DataString[5];
@@ -52,6 +50,10 @@ int __io_putchar(int ch) {
 	return 1;
 }
 
+int iRandom(int min, int max){
+   return min + rand() / (RAND_MAX / (max - min + 1) + 1);
+}
+
 static int iGet_string_length(char data[]){
 
     int until_end_cnt = 0;
@@ -69,6 +71,8 @@ static int iGet_string_length(char data[]){
 
 
 }
+
+
 
 
 void vGenerate_random() {
@@ -137,8 +141,14 @@ void vChoose_Val(choose_meas_val_t variant){
 		break;
 
 	case RANDM:
+		meas_value = ValArray[meas_idx];
 
+		if( z1 != 0){
+			srand(z1);
+		}
+		meas_idx = iRandom(0, 31);
 		//TODO: choose random array indexes
+		break;
 
 	default:
 		meas_value = ValArray[meas_idx];
@@ -235,7 +245,7 @@ void vDev_process() {
 		break;
 
 	case GENERATE_DIGEST:
-		vChoose_Val(NEXT);
+		vChoose_Val(RANDM);
 		vGenerete_digest();
 		adc_event_handler = GENERATE_RANDOM;
 		break;
@@ -247,7 +257,7 @@ void vDev_process() {
 
 	case SEND_VALUE:
 
-		vSerial_port_write(DIGEST);
+		vSerial_port_write(RANDOM);
 		adc_event_handler = MEAS;
 		break;
 
