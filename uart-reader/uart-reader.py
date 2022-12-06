@@ -1,3 +1,5 @@
+import os
+import shlex
 import time
 
 import serial
@@ -14,30 +16,24 @@ connected = False
 PORT_TYPE = "usbmodem"  # or com port, depends on os
 BAUD_RATE = ''
 watch_counter = 0
-num_counter = 0
 nums_saved = set([])
-to_save = []
-randNumbers = []
-message_type = ""
 
 
-def gen_hist_plot():
-    global num_counter
-    if num_counter % 20 == 0:
-        plt.hist(randNumbers, align='left', bins=10, edgecolor='black', linewidth=1.2)
-        plt.xlabel('Wartości wygenerowanych liczb')
-        plt.ylabel('Częstotliwość występowania')
-        plt.grid(True)
-        if num_counter % 60 == 0:
-            save_data()
-        plt.show()
-
-    else:
-        return
-
-
-def add_number(uart_read):
-    randNumbers.append(uart_read)
+def gen_hist_plot(rand_numbers: []):
+    test_time = datetime.now().strftime("%y_%m_%d")
+    plt.hist(rand_numbers, align='left', bins=100, edgecolor='black', linewidth=1.2)
+    plt.xlabel('Wartości wygenerowanych liczb')
+    plt.ylabel('Częstotliwość występowania')
+    plt.grid(True)
+    # plt.show()
+    plt.savefig('tests/' + test_time + '.pdf')
+    try:
+        os.system("open " + shlex.quote('tests/' + test_time + '.pdf'))
+    except Exception as e:
+        print("Failed to open the plot, due to: ")
+        print(e)
+        print("\n")
+    return
 
 
 def custom_errors(err):
@@ -74,11 +70,10 @@ def find_device():
         custom_errors(AttributeError)
 
 
-def read_line_uart():
-    global message_type
+def read_line_uart(rand_list: []):
     global connection_lost
-    global num_counter
     build_s = ""
+    build_int = 0
     read_c = ""
     try:
         while read_c != '\r':
@@ -93,37 +88,25 @@ def read_line_uart():
             connect_to_device()
 
     try:
-        message_type = build_s[2:]
         build_s = build_s[2:].rsplit('\n\r')
-        build_s = int(build_s[0])
+        build_int = int(build_s[0])
     except Exception as e:
         print("Failed to convert the data, due to: ")
         print(e)
-        return
 
-    add_number(build_s)
-    num_counter += 1
+    if build_int != 0:
+        rand_list.append(build_int)
+        if len(rand_list) % 60 == 0:
+            save_data(rand_list)
+            rand_list.clear()
 
-    return build_s
+    return rand_list
 
 
-def save_data():
-    global to_save
-    global nums_saved
-    to_save = set(randNumbers)
-    try:
-        to_save = to_save.difference(nums_saved)
-    except Exception as e:
-        print("Failed to add to array, due to: ")
-        print(e)
-        print("Skipping value")
-        pass
+def save_data(rand_list: []):
     test_time = datetime.now().strftime("%y_%m_%d")
     with open('tests/' + test_time + ".csv", 'a') as csv_file:
-        csv.writer(csv_file).writerows([to_save])
-
-    plt.savefig('tests/' + test_time + '.pdf')
-    nums_saved.update(to_save)
+        csv.writer(csv_file).writerows([rand_list])
 
 
 def connect_to_device():
@@ -135,12 +118,58 @@ def connect_to_device():
     connection_lost = 0
 
 
-def program_state():
+def read_loop():
+    random_list = []
+    while True:
+        random_list = read_line_uart(random_list)
 
-    pass
 
-connect_to_device()
+def generate_plot():
+    rand_numbers = []
+    path = ""
+    try:
+        path = str(input("Enter data path: "))
+    except Exception as e:
+        print("Failed to load path, due to: ")
+        print(e)
+
+    with open(path, 'r') as csv_file:
+        csvreader = csv.reader(csv_file)
+        for row in csvreader:
+            for number in row:
+                rand_numbers.append(int(number))
+    gen_hist_plot(rand_numbers)
+
+
+def prog_main():
+    user_input = 99
+
+    print("1. Read uart")
+    print("2. Generate plots")
+    print("0. Quit\n")
+
+    try:
+        user_input = int(input(""))
+
+    except Exception as e:
+        print("Failed to obtain user input, due to:")
+        print(e)
+        print("\n")
+
+    if user_input == 0:
+        sys.exit()
+    elif user_input == 1:
+        connect_to_device()
+        read_loop()
+    elif user_input == 2:
+        generate_plot()
+    else:
+        print("Please choose from existing options.")
+
+
+print("################################")
+print("\tUART-READER")
+print("################################\n\n")
 
 while True:
-    read_line_uart()
-    gen_hist_plot()
+    prog_main()
