@@ -1,7 +1,5 @@
-import os
 import shlex
 import time
-
 import serial
 # https://pyserial.readthedocs.io/en/latest/shortintro.html
 from serial.tools import list_ports
@@ -9,6 +7,7 @@ from datetime import datetime
 import sys
 import matplotlib.pyplot as plt
 import csv
+import os
 
 global stm_device
 connection_lost = 0
@@ -21,19 +20,48 @@ nums_saved = set([])
 
 def gen_hist_plot(rand_numbers: []):
     test_time = datetime.now().strftime("%y_%m_%d")
-    plt.hist(rand_numbers, align='left', bins=100, edgecolor='black', linewidth=1.2)
-    plt.xlabel('Wartości wygenerowanych liczb')
-    plt.ylabel('Częstotliwość występowania')
-    plt.grid(True)
-    # plt.show()
-    plt.savefig('tests/' + test_time + '.pdf')
     try:
-        os.system("open " + shlex.quote('tests/' + test_time + '.pdf'))
+        plt.hist(rand_numbers, align='left', bins=100, edgecolor='black', linewidth=1.2)
+        plt.xlabel('Wartości wygenerowanych liczb')
+        plt.ylabel('Częstotliwość występowania')
+        plt.grid(True)
+        # plt.show()
+        plt.savefig('tests/' + test_time + "_hist_plot"'.pdf')
+    except Exception as e:
+        print("Failed to generate plot, due to:")
+        print(e)
+        print("Check the origin file.")
+    try:
+        os.system("open " + shlex.quote('tests/' + test_time + "_hist_plot"'.pdf'))
     except Exception as e:
         print("Failed to open the plot, due to: ")
         print(e)
         print("\n")
     return
+
+
+def gen_col_plot(rand_numbers: []):
+    test_time = datetime.now().strftime("%y_%m_%d")
+
+    x_pairs = rand_numbers.copy()[:-1]
+    y_pairs = rand_numbers.copy()[1:]
+    try:
+        plt.hist2d(x_pairs, y_pairs, bins=100, cmap='plasma')
+        plt.grid(True)
+        # plt.clim(1)
+        plt.colorbar()
+        plt.savefig('tests/' + test_time + "_color_map" + '.pdf')
+    except Exception as e:
+        print("Failed to generate plot, due to:")
+        print(e)
+        print("Check the origin file.")
+
+    try:
+        os.system("open " + shlex.quote('tests/' + test_time + "_color_map" + '.pdf'))
+    except Exception as e:
+        print("Failed to open the plot, due to: ")
+        print(e)
+        print("\n")
 
 
 def custom_errors(err):
@@ -124,7 +152,7 @@ def read_loop():
         random_list = read_line_uart(random_list)
 
 
-def generate_plot():
+def generate_plot(plot_type: str):
     rand_numbers = []
     path = ""
     try:
@@ -133,23 +161,36 @@ def generate_plot():
         print("Failed to load path, due to: ")
         print(e)
 
+    while os.path.exists(path) is False:
+        print("Can't find expected file. Enter path again.")
+        try:
+            path = str(input("Enter data path: "))
+        except Exception as e:
+            print("Failed to load path, due to: ")
+            print(e)
+
     with open(path, 'r') as csv_file:
         csvreader = csv.reader(csv_file)
         for row in csvreader:
             for number in row:
                 rand_numbers.append(int(number))
-    gen_hist_plot(rand_numbers)
+
+    if plot_type == 'a':
+        gen_hist_plot(rand_numbers)
+
+    if plot_type == 'b':
+        gen_col_plot(rand_numbers)
 
 
 def prog_main():
     user_input = 99
-
+    print("\nMain menu")
     print("1. Read uart")
     print("2. Generate plots")
     print("0. Quit\n")
 
     try:
-        user_input = int(input(""))
+        user_input = int(input("Choose testing option: "))
 
     except Exception as e:
         print("Failed to obtain user input, due to:")
@@ -162,14 +203,18 @@ def prog_main():
         connect_to_device()
         read_loop()
     elif user_input == 2:
-        generate_plot()
+        user_string = ""
+        print("a. Histogram")
+        print("b. Colormap")
+        user_string = input("Choose type of plot: ")
+        generate_plot(user_string)
     else:
         print("Please choose from existing options.")
 
 
 print("################################")
 print("\tUART-READER")
-print("################################\n\n")
+print("################################\n")
 
 while True:
     prog_main()
