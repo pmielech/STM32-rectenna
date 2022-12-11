@@ -121,6 +121,23 @@ void vMulti_meas(serial_data_t dataType) {
 
 		break;
 
+	case RAW:
+
+		vGet_raw_value();
+		ValArray[array_cnt] = rawVal;
+		//20-100 ms
+
+		if(array_cnt == 31){
+			meas_complited = 1;
+			array_cnt = 0;
+			meas_idx = 0;
+		}
+		else{
+			array_cnt++;
+		}
+
+
+
 	default:
 		break;
 
@@ -147,7 +164,6 @@ void vChoose_Val(choose_meas_val_t variant){
 			srand(z1);
 		}
 		meas_idx = iRandom(0, 31);
-		//TODO: choose random array indexes
 		break;
 
 	default:
@@ -236,7 +252,7 @@ void vDev_process() {
 	switch(adc_event_handler) {
 
 	case MEAS:
-		vMulti_meas(OP_AMP);
+		vMulti_meas(RAW);
 
 		if(meas_complited == 1){
 			adc_event_handler = GENERATE_DIGEST;
@@ -257,7 +273,7 @@ void vDev_process() {
 
 	case SEND_VALUE:
 
-		vSerial_port_write(RANDOM);
+		vSerial_port_write(RAW);
 		adc_event_handler = MEAS;
 		break;
 

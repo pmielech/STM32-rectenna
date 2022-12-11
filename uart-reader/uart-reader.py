@@ -203,7 +203,6 @@ def prog_main():
         connect_to_device()
         read_loop()
     elif user_input == 2:
-        user_string = ""
         print("a. Histogram")
         print("b. Colormap")
         user_string = input("Choose type of plot: ")
