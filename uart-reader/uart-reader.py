@@ -12,7 +12,7 @@ import os
 global stm_device
 connection_lost = 0
 connected = False
-PORT_TYPE = "usbmodem"  # or com port, depends on os
+# PORT_TYPE = "usbmodem"  # or com port, depends on os
 BAUD_RATE = ''
 watch_counter = 0
 nums_saved = set([])
@@ -22,8 +22,8 @@ def gen_hist_plot(rand_numbers: []):
     test_time = datetime.now().strftime("%y_%m_%d")
     try:
         plt.hist(rand_numbers, align='left', bins=100, edgecolor='black', linewidth=1.2)
-        plt.xlabel('Wartości wygenerowanych liczb')
-        plt.ylabel('Częstotliwość występowania')
+        plt.xlabel('Values of the generated numbers')
+        plt.ylabel('Frequency')
         plt.grid(True)
         # plt.show()
         plt.savefig('tests/' + test_time + "_hist_plot"'.pdf')
@@ -49,6 +49,8 @@ def gen_col_plot(rand_numbers: []):
         plt.hist2d(x_pairs, y_pairs, bins=100, cmap='plasma')
         plt.grid(True)
         # plt.clim(1)
+        plt.xlabel("Value of the first number in the pair")
+        plt.ylabel("Value of the second number in the pair")
         plt.colorbar()
         plt.savefig('tests/' + test_time + "_color_map" + '.pdf')
     except Exception as e:
@@ -64,28 +66,17 @@ def gen_col_plot(rand_numbers: []):
         print("\n")
 
 
-def custom_errors(err):
-    if err == AttributeError:
-        print("Can't find any COM device")
-
-    elif KeyboardInterrupt:
-        print("Exiting...")
-        sys.exit()
-
-    else:
-        print("Unknown error occurred")
-
-
-def find_device():
+def find_device(port_type: str):
     global connection_lost
     global connected
     device = None
     port_list = list(list_ports.comports())
     try:
         for x in port_list:
-            if PORT_TYPE in str(x):
+            if port_type in str(x):
                 string_edit = str(x).lower()[:str(x).index(' - ')]
                 device = serial.Serial(string_edit, 38400, timeout=2)
+                break
     except Exception as e:
         print("Failed to connect to serial port, due to: ")
         print(e)
@@ -93,9 +84,9 @@ def find_device():
     if device is not None:
         connected = True
         return device
-
     else:
-        custom_errors(AttributeError)
+        print("Can't find any COM device")
+        return device
 
 
 def read_line_uart(rand_list: []):
@@ -140,16 +131,44 @@ def save_data(rand_list: []):
 def connect_to_device():
     global stm_device
     global connection_lost
+    com_err = 0
+    port_type = ""
+    try:
+        port_type = str(input("Please specify COM port: "))
+    except Exception as e:
+        print("Failed to load port name, due to: ")
+        print(e)
+
     while not connected:
-        stm_device = find_device()
+        stm_device = find_device(port_type)
+        if stm_device is None:
+            com_err += 1
+            if com_err > 6:
+                break
         time.sleep(1)
-    connection_lost = 0
+    if com_err != 0:
+        connection_lost = 1
+    else:
+        connection_lost = 0
 
 
 def read_loop():
+    global connection_lost
     random_list = []
-    while True:
-        random_list = read_line_uart(random_list)
+    readings_number = 0
+    if connection_lost != 0:
+        return
+    else:
+        while readings_number == 0:
+            try:
+                readings_number = int(input("Enter number of measurements: "))
+            except Exception as e:
+                print("Failed to load number, due to:")
+                print(e)
+
+        for x in range(0, readings_number):
+            random_list = read_line_uart(random_list)
+        print("Completed")
 
 
 def generate_plot(plot_type: str):
@@ -182,7 +201,7 @@ def generate_plot(plot_type: str):
         gen_col_plot(rand_numbers)
 
 
-def prog_main():
+def main():
     user_input = 99
     print("\nMain menu")
     print("1. Read uart")
@@ -190,7 +209,7 @@ def prog_main():
     print("0. Quit\n")
 
     try:
-        user_input = int(input("Choose testing option: "))
+        user_input = int(input("Choose testing option(1/2): "))
 
     except Exception as e:
         print("Failed to obtain user input, due to:")
@@ -206,7 +225,10 @@ def prog_main():
         print("a. Histogram")
         print("b. Colormap")
         user_string = input("Choose type of plot: ")
-        generate_plot(user_string)
+        if user_string == 'a' or user_string == 'b':
+            generate_plot(user_string)
+        else:
+            print("{lease provide a letter from the provided options")
     else:
         print("Please choose from existing options.")
 
@@ -215,5 +237,5 @@ print("################################")
 print("\tUART-READER")
 print("################################\n")
 
-while True:
-    prog_main()
+while __name__ == "__main__":
+    main()

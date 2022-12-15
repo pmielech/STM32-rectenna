@@ -87,9 +87,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 	}
 
 	else if(htim == &htim7) {
-			vLed_indicator(WORK_PHASE);
-		}
-
+		vLed_indicator(WORK_PHASE);
+	}
 }
 
 
@@ -119,6 +118,8 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
 
+
+
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -145,6 +146,11 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim7);
 
   vLed_indicator(STARTUP);
+
+  //HAL_ADC_Start_DMA(hadc, pData, Length)
+
+  //HAL_ADC_ConvCpltCallback(&hadc1)
+
   /* USER CODE END 2 */
 
   /* Infinite loop */

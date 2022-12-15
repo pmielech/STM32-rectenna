@@ -24,15 +24,15 @@ static uint32_t ValArray[32];
 static uint32_t meas_value = 0;
 static uint32_t randomGenerated = 0;
 static uint32_t opampVal = 0;
-static uint32_t rawVal = 0;
+
 
 static uint8_t meas_idx = 0;
 static uint8_t array_cnt = 0;
 static uint8_t meas_complited = 0;
 static uint8_t caseBreaker = 0;
-
 static adc_events_t adc_event_handler = 0;
 
+uint32_t rawVal = 0;
 
 extern ADC_HandleTypeDef hadc1;
 extern ADC_HandleTypeDef hadc4;
@@ -201,21 +201,6 @@ void vGenerete_digest(){
 }
 
 
-void vGain_adjustment() {
-
-	if(rawVal < 256) {
-		vCustom_gain(16);
-	}
-	if(rawVal >= 256 && rawVal < 512) {
-		vCustom_gain(8);
-	}
-	else if(rawVal >= 512 && rawVal < 1024) {
-		vCustom_gain(4);
-	}
-	else if(rawVal >= 1024) {
-		vCustom_gain(2);
-	}
-}
 
 
 void vSerial_port_write(serial_data_t serial_data_type) {
