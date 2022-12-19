@@ -8,9 +8,12 @@
 
 #include "dev/dev_led_status.h"
 #include "stm32f3xx.h"
+#include "main.h"
 
 
-void vLed_indicator(led_status_t control_state){
+
+
+void vLed_indicator(dev_status_t control_state){
 
 	switch(control_state){
 	case STARTUP:
@@ -21,13 +24,15 @@ void vLed_indicator(led_status_t control_state){
 		  }
 
 		break;
-
-	case WORK_PHASE:
+	case DATA_PROC:
+		HAL_GPIO_WritePin(SYS_LED_GPIO_Port, SYS_LED_Pin, GPIO_PIN_RESET);
 		HAL_GPIO_TogglePin(SYS_LED_GPIO_Port, SYS_LED_Pin);
+		HAL_GPIO_WritePin(SYS_LED_GPIO_Port, SYS_LED_Pin, GPIO_PIN_RESET);
 		break;
 
-	default:
 
+	default:
+		HAL_GPIO_TogglePin(SYS_LED_GPIO_Port, SYS_LED_Pin);
 		break;
 
 
