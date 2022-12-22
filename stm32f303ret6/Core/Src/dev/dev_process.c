@@ -18,6 +18,7 @@
 #include "stdlib.h"
 #include "stm32f3xx_hal_adc.h"
 
+#define NOISE_THRESHOLD 1000
 
 static char DataString[5];
 
@@ -27,10 +28,10 @@ static uint32_t randomGenerated = 0;
 static uint32_t opampVal = 0;
 
 
-static uint8_t meas_idx = 0;
+static uint16_t meas_idx = 0;
 static uint8_t array_cnt = 0;
 static uint8_t caseBreaker = 0;
-static adc_events_t adc_event_handler = MEAS;
+static events_t event_handler = MEAS;
 
 uint16_t dma_values[1000];
 uint32_t rawVal = 0;
@@ -70,11 +71,7 @@ static int iGet_string_length(char data[]){
         }
     }
     return 0;
-
-
 }
-
-
 
 void vGenerate_random() {
 
@@ -152,7 +149,7 @@ void vChoose_Val(choose_meas_val_t variant, uint16_t* vals){
 
 	switch(variant){
 	case CONST:
-		meas_idx = 31;
+		meas_idx = 999;
 		meas_value = vals[meas_idx];
 		break;
 
@@ -167,7 +164,7 @@ void vChoose_Val(choose_meas_val_t variant, uint16_t* vals){
 		if( z1 != 0){
 			srand(z1);
 		}
-		meas_idx = iRandom(0, 31);
+		meas_idx = iRandom(0, 999);
 		break;
 
 	default:
@@ -178,7 +175,8 @@ void vChoose_Val(choose_meas_val_t variant, uint16_t* vals){
 
 	snprintf(DataString, 5, "%d", meas_value);
 
-	if(meas_idx == 31){
+	if(meas_idx == 999){
+		meas_idx = 0;
 		proc_status = MEAS_READY;
 	}
 
@@ -206,70 +204,74 @@ void vGenerete_digest(){
 
 }
 
-
-
-
 void vSerial_port_write(serial_data_t serial_data_type) {
 
-	if(serial_data_type == RAW) {
-		printf("V: %d\n\r", meas_value);
+	switch(serial_data_type){
 
-	}
-	if(serial_data_type == OP_AMP){
-		printf("O: %d\n\r", meas_value);
+	case RAW:
+			printf("H: %hu\n\r", meas_value);
+		break;
 
-	}
+	case OP_AMP:
+		printf("O: %hu\n\r", meas_value);
+		break;
 
-	if(serial_data_type == DIGEST) {
-
+	case DIGEST:
 		printf("D: ");
-		for(int i  = 0; i < 32; i++)
-		{
-					printf("%02x", Digest[i]);
-		}
-		printf("\n\r");
+				for(int i  = 0; i < 32; i++)
+				{
+							printf("%02x", Digest[i]);
+				}
+				printf("\n\r");
+		break;
 
-	}
-	else if (serial_data_type == RANDOM) {
+	case RANDOM:
 		printf("R: %lu\n\r", randomGenerated);
+		break;
 
+	default:
+		printf("V: %hu\n\r", meas_value);
+		break;
 	}
-
 }
 
 
 void vInitMeas(){
 
-	if(proc_status == ADC_MEAS){
-		HAL_ADC_Start(&hadc1);
+	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)dma_values, 1000);
 
-	}
-	else{
-		HAL_ADC_Start_DMA(&hadc1, (uint32_t*)dma_values, 1000);
-	}
+}
 
+void vData_proc(){
+	for(int x = 0; x <= 999; x++){
+		if(dma_values[x] <= NOISE_THRESHOLD){
+			uint16_t temp_value = dma_values[x];
+			for(int i = 0; i < 8; i++){
+				temp_value = temp_value << 1;
+			}
+			dma_values[x] = temp_value;
+
+		}
+	}
 }
 
 
 void vDev_process() {
 
-	switch(adc_event_handler) {
+	switch(event_handler) {
 
 	case MEAS:
 		if(proc_status == STARTUP || proc_status == MEAS_READY){
 			proc_status = DMA_MEAS;
-			//proc_status = ADC_MEAS;
 			vInitMeas();
 
 		}
 
 		if(proc_status == DATA_PROC)
 		{
-			adc_event_handler = GENERATE_DIGEST;
-		}
 
-		else if(proc_status == ADC_MEAS){
-			vMulti_meas(RAW);
+			vData_proc();
+			event_handler = GENERATE_DIGEST;
 		}
 
 		else if(proc_status == DMA_MEAS){
@@ -281,22 +283,22 @@ void vDev_process() {
 	case GENERATE_DIGEST:
 		vChoose_Val(NEXT, dma_values);
 		vGenerete_digest();
-		adc_event_handler = GENERATE_RANDOM;
+		event_handler = GENERATE_RANDOM;
 		break;
 
 	case GENERATE_RANDOM:
 		vGenerate_random();
-		adc_event_handler = SEND_VALUE;
+		event_handler = SEND_VALUE;
 		break;
 
 	case SEND_VALUE:
 		vSerial_port_write(RAW);
 
 		if(proc_status != MEAS_READY){
-			adc_event_handler = GENERATE_DIGEST;
+			event_handler = GENERATE_DIGEST;
 		}
 		else{
-			adc_event_handler = MEAS;
+			event_handler = MEAS;
 		}
 		break;
 

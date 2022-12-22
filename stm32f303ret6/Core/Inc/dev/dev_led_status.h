@@ -16,7 +16,6 @@
 typedef enum {
 	STARTUP,
 	MEAS_READY,
-	ADC_MEAS,
 	DMA_MEAS,
 	DATA_PROC,
 	SEND_ALL

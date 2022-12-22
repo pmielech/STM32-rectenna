@@ -12,7 +12,6 @@ import os
 global stm_device
 connection_lost = 0
 connected = False
-# PORT_TYPE = "usbmodem"  # or com port, depends on os
 BAUD_RATE = ''
 watch_counter = 0
 nums_saved = set([])
@@ -27,6 +26,7 @@ def gen_hist_plot(rand_numbers: []):
         plt.grid(True)
         # plt.show()
         plt.savefig('tests/' + test_time + "_hist_plot"'.pdf')
+        plt.close()
     except Exception as e:
         print("Failed to generate plot, due to:")
         print(e)
@@ -53,6 +53,7 @@ def gen_col_plot(rand_numbers: []):
         plt.ylabel("Value of the second number in the pair")
         plt.colorbar()
         plt.savefig('tests/' + test_time + "_color_map" + '.pdf')
+        plt.close()
     except Exception as e:
         print("Failed to generate plot, due to:")
         print(e)

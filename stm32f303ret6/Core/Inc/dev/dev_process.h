@@ -19,7 +19,7 @@ typedef enum {
 	GENERATE_DIGEST,
 	GENERATE_RANDOM,
 	SEND_VALUE
-} adc_events_t ;
+} events_t ;
 
 typedef enum {
 	RAW,
