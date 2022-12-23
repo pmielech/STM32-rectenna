@@ -105,7 +105,6 @@ void vMulti_meas(serial_data_t dataType) {
 			vGain_adjustment();
 			vGet_opamp_val();
 			values_array[array_cnt] = opampVal;
-			//20-100 ms
 
 			if(array_cnt == 31){
 				proc_status = DATA_PROC;
@@ -115,7 +114,6 @@ void vMulti_meas(serial_data_t dataType) {
 			else{
 				array_cnt++;
 			}
-
 
 		break;
 
@@ -244,11 +242,9 @@ void vInitMeas(){
 
 void vData_proc(){
 	for(int x = 0; x <= 999; x++){
-		if(dma_values[x] <= NOISE_THRESHOLD){
+		if(dma_values[x] < NOISE_THRESHOLD){
 			uint16_t temp_value = dma_values[x];
-			for(int i = 0; i < 8; i++){
-				temp_value = temp_value << 1;
-			}
+			temp_value = temp_value << 4;
 			dma_values[x] = temp_value;
 
 		}
@@ -270,7 +266,7 @@ void vDev_process() {
 		if(proc_status == DATA_PROC)
 		{
 
-			vData_proc();
+			//vData_proc();
 			event_handler = GENERATE_DIGEST;
 		}
 

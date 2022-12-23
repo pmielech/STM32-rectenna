@@ -12,7 +12,6 @@
 
 
 
-
 void vLed_indicator(dev_status_t control_state){
 
 	switch(control_state){
@@ -22,12 +21,12 @@ void vLed_indicator(dev_status_t control_state){
 		    HAL_GPIO_TogglePin(SYS_LED_GPIO_Port, SYS_LED_Pin);
 		    HAL_Delay(50);
 		  }
-
+		HAL_GPIO_WritePin(SYS_LED_GPIO_Port, SYS_LED_Pin, GPIO_PIN_RESET);
 		break;
 	case DATA_PROC:
 		HAL_GPIO_WritePin(SYS_LED_GPIO_Port, SYS_LED_Pin, GPIO_PIN_SET);
-		break;
 
+		break;
 
 	default:
 		HAL_GPIO_TogglePin(SYS_LED_GPIO_Port, SYS_LED_Pin);

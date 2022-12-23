@@ -136,8 +136,6 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
 
-
-
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -154,6 +152,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   vLed_indicator(proc_status);
+
+  HAL_Delay(500);
 
   HAL_ADCEx_Calibration_Start(&hadc1, HAL_MAX_DELAY);
   //HAL_ADC_Start(&hadc1);
@@ -524,9 +524,9 @@ static void MX_TIM7_Init(void)
 
   /* USER CODE END TIM7_Init 1 */
   htim7.Instance = TIM7;
-  htim7.Init.Prescaler = 800 - 1;
+  htim7.Init.Prescaler = 1600 - 1;
   htim7.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim7.Init.Period = 300 - 1;
+  htim7.Init.Period = 500 - 1;
   htim7.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim7) != HAL_OK)
   {
