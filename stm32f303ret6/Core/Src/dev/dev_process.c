@@ -207,7 +207,15 @@ void vSerial_port_write(serial_data_t serial_data_type) {
 	switch(serial_data_type){
 
 	case RAW:
-			printf("H: %hu\n\r", meas_value);
+			if(meas_value > NOISE_THRESHOLD){
+				printf("H: %hu\n\r", meas_value);
+			}
+			else{
+				vData_proc();
+				printf("M: %hu\n\r", meas_value);
+			}
+
+
 		break;
 
 	case OP_AMP:
@@ -241,14 +249,14 @@ void vInitMeas(){
 }
 
 void vData_proc(){
-	for(int x = 0; x <= 999; x++){
-		if(dma_values[x] < NOISE_THRESHOLD){
-			uint16_t temp_value = dma_values[x];
-			temp_value = temp_value << 4;
-			dma_values[x] = temp_value;
-
+	uint16_t temp_value = meas_value;
+	for(int x=0; x<=1; x++) {
+		if( temp_value >= NOISE_THRESHOLD){
+			break;
 		}
+		temp_value = (temp_value << 4 ) | temp_value;
 	}
+	meas_value = temp_value;
 }
 
 
@@ -265,8 +273,6 @@ void vDev_process() {
 
 		if(proc_status == DATA_PROC)
 		{
-
-			//vData_proc();
 			event_handler = GENERATE_DIGEST;
 		}
 

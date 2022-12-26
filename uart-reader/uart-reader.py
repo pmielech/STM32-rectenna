@@ -90,11 +90,12 @@ def find_device(port_type: str):
         return device
 
 
-def read_line_uart(rand_list: []):
+def read_line_uart(rand_list_raw: [], rand_list_mod: []):
     global connection_lost
+    msg_type = ""
     build_s = ""
-    build_int = 0
     read_c = ""
+    build_int = 0
     try:
         while read_c != '\r':
             read_c = stm_device.read().decode()
@@ -108,6 +109,7 @@ def read_line_uart(rand_list: []):
             connect_to_device()
 
     try:
+        msg_type = build_s[:1]
         build_s = build_s[2:].rsplit('\n\r')
         build_int = int(build_s[0])
     except Exception as e:
@@ -115,17 +117,24 @@ def read_line_uart(rand_list: []):
         print(e)
 
     if build_int != 0:
-        rand_list.append(build_int)
-        if len(rand_list) % 60 == 0:
-            save_data(rand_list)
-            rand_list.clear()
+        if msg_type == 'M':
+            rand_list_mod.append(build_int)
+            if len(rand_list_mod) % 60 == 0:
+                save_data(rand_list_mod, msg_type)
+                rand_list_mod.clear()
 
-    return rand_list
+        if msg_type == 'R':
+            rand_list_raw.append(build_int)
+            if len(rand_list_raw) % 60 == 0:
+                save_data(rand_list_raw, msg_type)
+                rand_list_raw.clear()
+
+    return rand_list_raw, rand_list_mod
 
 
-def save_data(rand_list: []):
+def save_data(rand_list: [], data_t: str):
     test_time = datetime.now().strftime("%y_%m_%d")
-    with open('tests/' + test_time + ".csv", 'a') as csv_file:
+    with open('tests/' + test_time + "_" + data_t + ".csv", 'a') as csv_file:
         csv.writer(csv_file).writerows([rand_list])
 
 
@@ -155,7 +164,7 @@ def connect_to_device():
 
 def read_loop():
     global connection_lost
-    random_list = []
+    random_list_raw, random_list_mod = [], []
     readings_number = 0
     if connection_lost != 0:
         return
@@ -168,7 +177,14 @@ def read_loop():
                 print(e)
 
         for x in range(0, readings_number):
-            random_list = read_line_uart(random_list)
+            random_list_raw, random_list_mod = read_line_uart(random_list_raw, random_list_mod)
+        if not random_list_raw:
+            save_data(random_list_raw, 'R')
+            random_list_raw.clear()
+
+        if not random_list_mod:
+            save_data(random_list_mod, 'M')
+            random_list_mod.clear()
         print("Completed")
 
 
