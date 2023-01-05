@@ -47,8 +47,7 @@ def gen_col_plot(rand_numbers: []):
     y_pairs = rand_numbers.copy()[1:]
     try:
         plt.hist2d(x_pairs, y_pairs, bins=100, cmap='plasma')
-        plt.grid(True)
-        # plt.clim(1)
+        # plt.grid(True)
         plt.xlabel("Value of the first number in the pair")
         plt.ylabel("Value of the second number in the pair")
         plt.colorbar()
@@ -123,7 +122,7 @@ def read_line_uart(rand_list_raw: [], rand_list_mod: []):
                 save_data(rand_list_mod, msg_type)
                 rand_list_mod.clear()
 
-        if msg_type == 'R':
+        else:
             rand_list_raw.append(build_int)
             if len(rand_list_raw) % 60 == 0:
                 save_data(rand_list_raw, msg_type)
@@ -179,7 +178,7 @@ def read_loop():
         for x in range(0, readings_number):
             random_list_raw, random_list_mod = read_line_uart(random_list_raw, random_list_mod)
         if not random_list_raw:
-            save_data(random_list_raw, 'R')
+            save_data(random_list_raw, 'V')
             random_list_raw.clear()
 
         if not random_list_mod:

@@ -21,7 +21,7 @@
 #define NOISE_THRESHOLD 1000
 
 static char DataString[5];
-
+static uint16_t combined_values[64];
 static uint16_t values_array[32];
 static uint16_t meas_value = 0;
 static uint32_t randomGenerated = 0;
@@ -186,13 +186,11 @@ void vGet_raw_value() {
 	HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
   	rawVal = HAL_ADC_GetValue(&hadc1);
 
-
 }
 
 void vGet_opamp_val() {
 
 	opampVal = HAL_ADC_GetValue(&hadc4);
-
 
 }
 
@@ -208,10 +206,9 @@ void vSerial_port_write(serial_data_t serial_data_type) {
 
 	case RAW:
 			if(meas_value > NOISE_THRESHOLD){
-				printf("H: %hu\n\r", meas_value);
+				printf("V: %hu\n\r", meas_value);
 			}
 			else{
-				vData_proc();
 				printf("M: %hu\n\r", meas_value);
 			}
 
@@ -249,14 +246,39 @@ void vInitMeas(){
 }
 
 void vData_proc(){
-	uint16_t temp_value = meas_value;
-	for(int x=0; x<=1; x++) {
-		if( temp_value >= NOISE_THRESHOLD){
+
+	uint8_t new_number_idx = 0;
+	uint8_t bit_idx = 15;
+	uint16_t new_number = 0;
+
+
+	for(int x = 0; x < 1024; x++){
+
+		uint16_t u16t_Temp = dma_values[x];
+
+		if(u16t_Temp & 1){
+			new_number = new_number | (1 << bit_idx);
+		}
+
+		if(bit_idx == 0){
+			combined_values[new_number_idx] = new_number;
+			new_number = 0;
+			new_number_idx += 1;
+			bit_idx = 15;
+		} else {
+			bit_idx -= 1;
+		}
+
+		if(new_number_idx >= 64){
 			break;
 		}
-		temp_value = (temp_value << 4 ) | temp_value;
+
+
 	}
-	meas_value = temp_value;
+
+
+
+
 }
 
 
@@ -283,9 +305,11 @@ void vDev_process() {
 		break;
 
 	case GENERATE_DIGEST:
-		vChoose_Val(NEXT, dma_values);
-		vGenerete_digest();
-		event_handler = GENERATE_RANDOM;
+		vData_proc();
+		event_handler = MEAS;
+		//vChoose_Val(NEXT, dma_values);
+		//vGenerete_digest();
+		//event_handler = GENERATE_RANDOM;
 		break;
 
 	case GENERATE_RANDOM:

@@ -88,8 +88,6 @@ HAL_StatusTypeDef HAL_IWDG_Refresh(IWDG_HandleTypeDef *hiwdg);
 
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
-
-
 	if(htim == &htim6 && proc_status != DMA_MEAS) {
 		vDev_process();
 	}
@@ -101,8 +99,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim){
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
-
-
 	HAL_ADC_Stop_DMA(&hadc1);
 	proc_status = DATA_PROC;
 }
