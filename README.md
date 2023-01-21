@@ -1,4 +1,4 @@
-# opamp-schottky
+# STM32-rectenna
 
 Portable measurement system, based on an STM32f303re microcontroller. It was build to measure radio noise collected via rectenna.
 
