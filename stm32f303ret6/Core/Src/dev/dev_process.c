@@ -20,8 +20,8 @@
 
 #define NOISE_THRESHOLD 1000
 
-static char DataString[5];
-static uint16_t combined_values[64];
+static char DataString[6];
+static uint16_t combined_values[128];
 static uint16_t values_array[32];
 static uint16_t meas_value = 0;
 static uint32_t randomGenerated = 0;
@@ -33,7 +33,7 @@ static uint8_t array_cnt = 0;
 static uint8_t caseBreaker = 0;
 static events_t event_handler = MEAS;
 
-uint16_t dma_values[1000];
+uint16_t dma_values[1024];
 uint32_t rawVal = 0;
 
 extern ADC_HandleTypeDef hadc1;
@@ -46,7 +46,7 @@ extern uint32_t z2;
 extern uint32_t z3;
 extern uint32_t z4;
 extern dev_status_t proc_status;
-
+extern IWDG_HandleTypeDef hiwdg;
 
 int __io_putchar(int ch) {
 	HAL_UART_Transmit(&huart4, (uint8_t*)&ch, 1, HAL_MAX_DELAY);
@@ -61,7 +61,7 @@ static int iGet_string_length(char data[]){
 
     int until_end_cnt = 0;
 
-    for(int i = 0; i <= 5; i++){
+    for(int i = 0; i <= 6; i++){
         if( data[i] == '\0'){
 
             return until_end_cnt;
@@ -73,8 +73,7 @@ static int iGet_string_length(char data[]){
     return 0;
 }
 
-void vGenerate_random() {
-
+void vFeed_gen(){
 	for(int i = 0; i < 8; i++){
 		z1 += Digest[i];
 	}
@@ -90,6 +89,16 @@ void vGenerate_random() {
 	for(int i = 24; i < 32; i++){
 			z4 += Digest[i];
 		}
+
+	z1 = z1 | 1;
+	z2 = z2 | 1;
+	z3 = z3 | 1;
+	z4 = z4 | 1;
+}
+
+
+
+void vGenerate_random() {
 
 	 randomGenerated = lfsr113();
 
@@ -147,13 +156,18 @@ void vChoose_Val(choose_meas_val_t variant, uint16_t* vals){
 
 	switch(variant){
 	case CONST:
-		meas_idx = 999;
+		meas_idx = 1023;
 		meas_value = vals[meas_idx];
 		break;
 
 	case NEXT:
 		meas_value = vals[meas_idx];
-		meas_idx++;
+		if( meas_idx >= 1023){
+			meas_idx = 0;
+		} else{
+			meas_idx++;
+		}
+
 		break;
 
 	case RANDM:
@@ -162,7 +176,7 @@ void vChoose_Val(choose_meas_val_t variant, uint16_t* vals){
 		if( z1 != 0){
 			srand(z1);
 		}
-		meas_idx = iRandom(0, 999);
+		meas_idx = iRandom(0, 1023);
 		break;
 
 	default:
@@ -171,12 +185,7 @@ void vChoose_Val(choose_meas_val_t variant, uint16_t* vals){
 
 	}
 
-	snprintf(DataString, 5, "%d", meas_value);
-
-	if(meas_idx == 999){
-		meas_idx = 0;
-		proc_status = MEAS_READY;
-	}
+	snprintf(DataString, 6, "%d", meas_value);
 
 }
 
@@ -196,7 +205,7 @@ void vGet_opamp_val() {
 
 void vGenerete_digest(){
 
-	sha256_data((uint8_t*)DataString, iGet_string_length(DataString));
+	sha256_data((uint8_t *)DataString, iGet_string_length(DataString));
 
 }
 
@@ -213,10 +222,6 @@ void vSerial_port_write(serial_data_t serial_data_type) {
 			}
 
 
-		break;
-
-	case OP_AMP:
-		printf("O: %hu\n\r", meas_value);
 		break;
 
 	case DIGEST:
@@ -236,12 +241,13 @@ void vSerial_port_write(serial_data_t serial_data_type) {
 		printf("V: %hu\n\r", meas_value);
 		break;
 	}
+
 }
 
 
 void vInitMeas(){
 
-	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)dma_values, 1000);
+	HAL_ADC_Start_DMA(&hadc1, (uint32_t*)dma_values, 1024);
 
 }
 
@@ -273,12 +279,7 @@ void vData_proc(){
 			break;
 		}
 
-
 	}
-
-
-
-
 }
 
 
@@ -290,46 +291,33 @@ void vDev_process() {
 		if(proc_status == STARTUP || proc_status == MEAS_READY){
 			proc_status = DMA_MEAS;
 			vInitMeas();
-
-		}
-
-		if(proc_status == DATA_PROC)
-		{
-			event_handler = GENERATE_DIGEST;
-		}
-
-		else if(proc_status == DMA_MEAS){
+		} if(proc_status == DATA_PROC){
+			event_handler = DATA_PROCESSING;
+		} else if(proc_status == DMA_MEAS){
 			;
-		}
+		} break;
 
-		break;
-
-	case GENERATE_DIGEST:
+	case DATA_PROCESSING:
 		vData_proc();
+		for(int x = 0; x < 64; x ++){
+			//vChoose_Val(NEXT, dma_values);
+			vChoose_Val(NEXT, combined_values);
+			vGenerete_digest();
+			vFeed_gen();
+			for(int y = 0; y <= 180; y++){
+				HAL_IWDG_Refresh(&hiwdg);
+				vGenerate_random();
+				vSerial_port_write(RANDOM);
+			}
+
+		}
+		proc_status = MEAS_READY;
 		event_handler = MEAS;
-		//vChoose_Val(NEXT, dma_values);
-		//vGenerete_digest();
-		//event_handler = GENERATE_RANDOM;
-		break;
-
-	case GENERATE_RANDOM:
-		vGenerate_random();
-		event_handler = SEND_VALUE;
-		break;
-
-	case SEND_VALUE:
-		vSerial_port_write(RAW);
-
-		if(proc_status != MEAS_READY){
-			event_handler = GENERATE_DIGEST;
-		}
-		else{
-			event_handler = MEAS;
-		}
 		break;
 
 	default:
 		caseBreaker++;
 		break;
-	}
-}
+
+}}
+

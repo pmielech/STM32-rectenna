@@ -21,6 +21,7 @@ def gen_hist_plot(rand_numbers: []):
     test_time = datetime.now().strftime("%y_%m_%d")
     try:
         plt.hist(rand_numbers, align='left', bins=100, edgecolor='black', linewidth=1.2)
+        # logs=True
         plt.xlabel('Values of the generated numbers')
         plt.ylabel('Frequency')
         plt.grid(True)
@@ -46,7 +47,13 @@ def gen_col_plot(rand_numbers: []):
     x_pairs = rand_numbers.copy()[:-1]
     y_pairs = rand_numbers.copy()[1:]
     try:
-        plt.hist2d(x_pairs, y_pairs, bins=100, cmap='plasma')
+        plt.hist2d(x_pairs, y_pairs, bins=100, cmap='plasma', vmax=20)
+        #vmax=40
+        #xmin, xmax, ymin, ymax = plt.axis()
+        #ann = "ymax = " + str(ymax)
+        #plt.annotate(ann,(1,5))
+        #plt.xlim(2, 25)
+        #plt.ylim(2, 25)
         # plt.grid(True)
         plt.xlabel("Value of the first number in the pair")
         plt.ylabel("Value of the second number in the pair")

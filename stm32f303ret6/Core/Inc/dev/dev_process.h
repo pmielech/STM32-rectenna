@@ -16,9 +16,7 @@
 
 typedef enum {
 	MEAS,
-	GENERATE_DIGEST,
-	GENERATE_RANDOM,
-	SEND_VALUE
+	DATA_PROCESSING,
 } events_t ;
 
 typedef enum {
@@ -37,7 +35,8 @@ typedef enum {
 typedef enum {
 	CONST,
 	NEXT,
-	RANDM
+	RANDM,
+	COMBINED,
 } choose_meas_val_t ;
 
 

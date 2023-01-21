@@ -25,7 +25,6 @@ void vLed_indicator(dev_status_t control_state){
 		break;
 	case DATA_PROC:
 		HAL_GPIO_WritePin(SYS_LED_GPIO_Port, SYS_LED_Pin, GPIO_PIN_SET);
-
 		break;
 
 	default:
