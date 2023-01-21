@@ -15,9 +15,12 @@
 
 typedef enum {
 	STARTUP,
-	WORK_PHASE
-} led_status_t ;
+	MEAS_READY,
+	DMA_MEAS,
+	DATA_PROC,
+	SEND_ALL
+} dev_status_t;
 
-void vLed_indicator(led_status_t control_state);
+void vLed_indicator(dev_status_t control_state);
 
 #endif /* INC_DEV_DEV_LED_STATUS_H_ */

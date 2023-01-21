@@ -12,7 +12,6 @@ import os
 global stm_device
 connection_lost = 0
 connected = False
-# PORT_TYPE = "usbmodem"  # or com port, depends on os
 BAUD_RATE = ''
 watch_counter = 0
 nums_saved = set([])
@@ -22,11 +21,13 @@ def gen_hist_plot(rand_numbers: []):
     test_time = datetime.now().strftime("%y_%m_%d")
     try:
         plt.hist(rand_numbers, align='left', bins=100, edgecolor='black', linewidth=1.2)
+        # logs=True
         plt.xlabel('Values of the generated numbers')
         plt.ylabel('Frequency')
         plt.grid(True)
         # plt.show()
         plt.savefig('tests/' + test_time + "_hist_plot"'.pdf')
+        plt.close()
     except Exception as e:
         print("Failed to generate plot, due to:")
         print(e)
@@ -46,13 +47,19 @@ def gen_col_plot(rand_numbers: []):
     x_pairs = rand_numbers.copy()[:-1]
     y_pairs = rand_numbers.copy()[1:]
     try:
-        plt.hist2d(x_pairs, y_pairs, bins=100, cmap='plasma')
-        plt.grid(True)
-        # plt.clim(1)
+        plt.hist2d(x_pairs, y_pairs, bins=100, cmap='plasma', vmax=20)
+        #vmax=40
+        #xmin, xmax, ymin, ymax = plt.axis()
+        #ann = "ymax = " + str(ymax)
+        #plt.annotate(ann,(1,5))
+        #plt.xlim(2, 25)
+        #plt.ylim(2, 25)
+        # plt.grid(True)
         plt.xlabel("Value of the first number in the pair")
         plt.ylabel("Value of the second number in the pair")
         plt.colorbar()
         plt.savefig('tests/' + test_time + "_color_map" + '.pdf')
+        plt.close()
     except Exception as e:
         print("Failed to generate plot, due to:")
         print(e)
@@ -89,11 +96,12 @@ def find_device(port_type: str):
         return device
 
 
-def read_line_uart(rand_list: []):
+def read_line_uart(rand_list_raw: [], rand_list_mod: []):
     global connection_lost
+    msg_type = ""
     build_s = ""
-    build_int = 0
     read_c = ""
+    build_int = 0
     try:
         while read_c != '\r':
             read_c = stm_device.read().decode()
@@ -107,6 +115,7 @@ def read_line_uart(rand_list: []):
             connect_to_device()
 
     try:
+        msg_type = build_s[:1]
         build_s = build_s[2:].rsplit('\n\r')
         build_int = int(build_s[0])
     except Exception as e:
@@ -114,17 +123,24 @@ def read_line_uart(rand_list: []):
         print(e)
 
     if build_int != 0:
-        rand_list.append(build_int)
-        if len(rand_list) % 60 == 0:
-            save_data(rand_list)
-            rand_list.clear()
+        if msg_type == 'M':
+            rand_list_mod.append(build_int)
+            if len(rand_list_mod) % 60 == 0:
+                save_data(rand_list_mod, msg_type)
+                rand_list_mod.clear()
 
-    return rand_list
+        else:
+            rand_list_raw.append(build_int)
+            if len(rand_list_raw) % 60 == 0:
+                save_data(rand_list_raw, msg_type)
+                rand_list_raw.clear()
+
+    return rand_list_raw, rand_list_mod
 
 
-def save_data(rand_list: []):
+def save_data(rand_list: [], data_t: str):
     test_time = datetime.now().strftime("%y_%m_%d")
-    with open('tests/' + test_time + ".csv", 'a') as csv_file:
+    with open('tests/' + test_time + "_" + data_t + ".csv", 'a') as csv_file:
         csv.writer(csv_file).writerows([rand_list])
 
 
@@ -154,7 +170,7 @@ def connect_to_device():
 
 def read_loop():
     global connection_lost
-    random_list = []
+    random_list_raw, random_list_mod = [], []
     readings_number = 0
     if connection_lost != 0:
         return
@@ -167,7 +183,14 @@ def read_loop():
                 print(e)
 
         for x in range(0, readings_number):
-            random_list = read_line_uart(random_list)
+            random_list_raw, random_list_mod = read_line_uart(random_list_raw, random_list_mod)
+        if not random_list_raw:
+            save_data(random_list_raw, 'V')
+            random_list_raw.clear()
+
+        if not random_list_mod:
+            save_data(random_list_mod, 'M')
+            random_list_mod.clear()
         print("Completed")
 
 
