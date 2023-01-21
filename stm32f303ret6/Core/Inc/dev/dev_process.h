@@ -11,6 +11,7 @@
 #define BIT_RESS  4096.0f
 #define REF_VALU  3.30f
 
+
 #include "stdint.h"
 
 typedef enum {
@@ -43,7 +44,6 @@ typedef enum {
 
 void vGet_raw_value();
 void vGet_opamp_val();
-void vGain_adjustment();
 void vDev_process();
 
 #endif /* INC_MYDEVICE_DEV_ADC_H_ */

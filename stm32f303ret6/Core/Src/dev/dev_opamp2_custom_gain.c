@@ -6,35 +6,38 @@
  */
 
 #include "dev/dev_opamp2_custom_gain.h"
+#include "dev/dev_process.h"
+
 #include "stm32f3xx.h"
 
 void Error_Handler(void);
+
+uint32_t Gain = OPAMP_PGA_GAIN_2;
 extern OPAMP_HandleTypeDef hopamp4;
+extern uint32_t rawVal;
 
-void vCustom_gain(uint8_t newGain) {
 
-	switch(newGain) {
+void vGain_adjustment() {
 
-	case 2:
-		hopamp4.Init.PgaGain = OPAMP_PGA_GAIN_2;
-		break;
-
-	case 4:
-		hopamp4.Init.PgaGain = OPAMP_PGA_GAIN_4;
-		break;
-
-	case 8:
-		hopamp4.Init.PgaGain = OPAMP_PGA_GAIN_8;
-		break;
-
-	case 16:
-		hopamp4.Init.PgaGain = OPAMP_PGA_GAIN_16;
-		break;
-
-	default:
-		hopamp4.Init.PgaGain = OPAMP_PGA_GAIN_2;
-		break;
+	if(rawVal < MIN_RES_RANGE) {
+		Gain = (OPAMP_PGA_GAIN_16);
 	}
+	if(rawVal >= MIN_RES_RANGE && rawVal < MID_RES_RANGE) {
+		Gain = (OPAMP_PGA_GAIN_8);
+	}
+	else if(rawVal >= MID_RES_RANGE && rawVal < MAX_RES_RANGE) {
+		Gain = (OPAMP_PGA_GAIN_4);
+	}
+	else if(rawVal >= MAX_RES_RANGE) {
+		Gain = (OPAMP_PGA_GAIN_2);
+	}
+}
+
+
+
+void vCustom_gain() {
+
+	hopamp4.Init.PgaGain = Gain;
 
 	hopamp4.Init.UserTrimming = OPAMP_TRIMMING_FACTORY;
 	if (HAL_OPAMP_Init(&hopamp4) != HAL_OK)
